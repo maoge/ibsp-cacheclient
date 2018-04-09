@@ -49,6 +49,18 @@ public class MetasvrConfigFactory {
 		}
 		return instance;
 	}
+	
+	public String getMetasvrUrl() {
+		return metasvrUrl.getNextUrl();
+	}
+	
+	public void putBrokenUrl(String url) {
+		metasvrUrl.putBrokenUrl(url);
+	}
+	
+	public void doUrlCheck() {
+		metasvrUrl.doUrlCheck();
+	}
 
 	private MetasvrConfigFactory(String metasvrUrl) {
 		this.metasvrUrl = new MetasvrUrlConfig(metasvrUrl);
@@ -115,6 +127,7 @@ public class MetasvrConfigFactory {
 	}
 
 	public synchronized void close() {
+		metasvrUrl.close();
 		for (ConnectionPool pool : Global.poolList.values()) {
 			pool.shutdown();
 		}

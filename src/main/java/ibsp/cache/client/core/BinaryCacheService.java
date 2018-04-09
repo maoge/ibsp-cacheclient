@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import ibsp.cache.client.config.Configuration;
 import ibsp.cache.client.config.MetasvrConfigFactory;
+import ibsp.cache.client.event.EventController;
 //import ibsp.cache.client.config.ZookeeperConfigFactory;
 import ibsp.cache.client.exception.CacheServiceException;
 import ibsp.cache.client.exception.CacheServiceException.CacheServiceErrorInfo;
@@ -40,6 +41,8 @@ public class BinaryCacheService implements IBinaryCacheService {
     	for(String gId : groupId) {
     		metasvrConfigFactory.addGroup( gId );
     	}
+    	//init EventController
+    	EventController.getInstance();
 	}
 		
 	@Override
@@ -160,6 +163,7 @@ public class BinaryCacheService implements IBinaryCacheService {
 			
 	public void close() {
 		try {
+			EventController.getInstance().shutdown();
 			metasvrConfigFactory.close();
 		} catch(Exception e) {
 			log.error("关闭CacheService异常！", e);
