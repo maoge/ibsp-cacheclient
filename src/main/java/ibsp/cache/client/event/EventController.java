@@ -268,7 +268,20 @@ public class EventController {
 		}
 		
 		private void dealEventMsg(JSONObject event) {
-			//TODO deal cache proxy add and remove
+			int code = event.getInteger(CONSTS.EV_CODE);
+			String jsonStr = event.getString(CONSTS.EV_JSON_STR);
+			JSONObject obj = JSONObject.parseObject(jsonStr);
+			
+			switch (EventType.get(code)) {
+			case e61:
+				MetasvrConfigFactory.getInstance().addProxy(obj.getString("SERV_NAME"), obj);
+				break;
+			case e62:
+				MetasvrConfigFactory.getInstance().removeProxy(obj.getString("SERV_NAME"), obj);
+				break;
+			default:
+				break;
+			}
 		}
 		
 		private void doReport() {

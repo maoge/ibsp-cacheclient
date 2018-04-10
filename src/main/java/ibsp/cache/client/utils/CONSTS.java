@@ -51,7 +51,7 @@ public class CONSTS {
 	public static final String CACHE_SERVICE           = "cachesvr";
 	
 	public static final String FUN_URL_TEST            = "test";
-	public static final String FUN_GET_PROXY           = "getProxyByServiceName";
+	public static final String FUN_GET_PROXY           = "getDeployedProxyByServiceName";
 	public static final String FUN_PUT_STATISTIC_INFO  = "putClientStatisticInfo";
 	
 	public static final int FIX_HEAD_LEN    = 10;
@@ -72,4 +72,9 @@ public class CONSTS {
 	public static final String PARAM_CLIENT_INFO = "CLIENT_INFO";
 	
 	public static final String TYPE_CACHE_CLIENT = "CACHE_CLIENT";
+	
+	//event
+	public static final String EV_CODE = "EVENT_CODE";
+	public static final String EV_SERV_ID = "SERV_ID";
+	public static final String EV_JSON_STR = "JSON_STR";
 }

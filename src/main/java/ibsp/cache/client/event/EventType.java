@@ -6,15 +6,8 @@ import java.util.Map;
 
 public enum EventType {
 	
-	e0(50010000,   false, "default"),
-
-	e51(50010051,  false, "stop send/publish msg on vbroker"),    // group缩容前要对即将移除的VBROKER停写
-	e52(50010052,  false, "add vbroker to group"),                // group扩容
-	e53(50010053,  false, "remove vbroker from group"),           // group缩容
-	
-	e54(50010054,  true,  "broker down"),                         // broker crashed
-	e55(50010055,  false, "broker recovered"),                    // broker service is recovered
-	e56(50010056,  true,  "ha cluster swithed");                  // master-slave have switched 
+	e61(50061, false, "cache proxy deployed"),       // 接入机扩容
+	e62(50062, false, "cache proxy undeployed");       // 接入机缩容
 
 	private final int value;
 	private final boolean alarm;

@@ -90,17 +90,6 @@ public class MetasvrConfigFactory {
 		return this.globalGroupId.contains(groupId);
 	}
 	
-	public Map<String, Proxy> getMapProxy(String groupId) {
-	    Map<String, Proxy> result = new HashMap<String, Proxy>();
-	    for (String ID : this.mapProxy.keySet()) {
-	    	if (this.mapProxy.get(ID).getGroupID().equals(groupId)) {
-	    		result.put(ID, this.mapProxy.get(ID));
-	    	}
-	    }
-	    return result;
-	}
-	
-	
 	private void loadConfigInfo(String groupId) {
 		String initUrl = String.format("%s/%s/%s?%s", this.metasvrUrl.getNextUrl(), 
 				CONSTS.CACHE_SERVICE, CONSTS.FUN_GET_PROXY, "SERV_NAME="+groupId);
@@ -124,6 +113,28 @@ public class MetasvrConfigFactory {
 			logger.error("缓存客户端初始化失败！");
 			throw new CacheServiceException(CacheServiceErrorInfo.e12);
 		}
+	}
+	
+	public Map<String, Proxy> getMapProxy(String groupId) {
+	    Map<String, Proxy> result = new HashMap<String, Proxy>();
+	    for (String ID : this.mapProxy.keySet()) {
+	    	if (this.mapProxy.get(ID).getGroupID().equals(groupId)) {
+	    		result.put(ID, this.mapProxy.get(ID));
+	    	}
+	    }
+	    return result;
+	}
+	
+	public void addProxy(String servID, JSONObject obj) {
+		Proxy proxy = new Proxy(obj, servID);
+		mapProxy.put(proxy.getID(), proxy);
+		Global.poolList.get(servID).addProxy(proxy.getID());
+	}
+	
+	public void removeProxy(String servID, JSONObject obj) {
+		Proxy proxy = new Proxy(obj, servID);
+		mapProxy.put(proxy.getID(), proxy);
+		Global.poolList.get(servID).decreaseProxy(proxy.getID());
 	}
 
 	public synchronized void close() {
