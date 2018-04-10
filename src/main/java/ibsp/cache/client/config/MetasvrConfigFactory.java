@@ -125,16 +125,22 @@ public class MetasvrConfigFactory {
 	    return result;
 	}
 	
-	public void addProxy(String servID, JSONObject obj) {
-		Proxy proxy = new Proxy(obj, servID);
-		mapProxy.put(proxy.getID(), proxy);
-		Global.poolList.get(servID).addProxy(proxy.getID());
+	public void addProxy(String groupID, JSONObject obj) {
+		if (this.hasGroupId(groupID)) {
+			Proxy proxy = new Proxy(obj, groupID);
+			mapProxy.put(proxy.getID(), proxy);
+			Global.poolList.get(groupID).addProxy(proxy.getID());
+		}
 	}
 	
-	public void removeProxy(String servID, JSONObject obj) {
-		Proxy proxy = new Proxy(obj, servID);
-		mapProxy.put(proxy.getID(), proxy);
-		Global.poolList.get(servID).decreaseProxy(proxy.getID());
+	public void removeProxy(String groupID, JSONObject obj) {
+		if (this.hasGroupId(groupID)) {
+			Proxy proxy = new Proxy(obj, groupID);
+			if (mapProxy.containsKey(proxy.getID())) {
+				Global.poolList.get(groupID).decreaseProxy(proxy.getID());
+				mapProxy.remove(proxy.getID());
+			}
+		}
 	}
 
 	public synchronized void close() {
