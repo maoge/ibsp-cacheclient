@@ -59,10 +59,10 @@ public class EventHandler extends HandlerAdapter {
 			}
 			
 			int bodyLen = 0;
-			bodyLen |= buffArr[CONSTS.FIX_PREHEAD_LEN];
-			bodyLen |= buffArr[CONSTS.FIX_PREHEAD_LEN+1] << 8;
-			bodyLen |= buffArr[CONSTS.FIX_PREHEAD_LEN+2] << 16;
-			bodyLen |= buffArr[CONSTS.FIX_PREHEAD_LEN+3] << 24;
+			bodyLen |= buffArr[CONSTS.FIX_PREHEAD_LEN] & 0xff;
+			bodyLen |= (buffArr[CONSTS.FIX_PREHEAD_LEN+1] & 0xff) << 8;
+			bodyLen |= (buffArr[CONSTS.FIX_PREHEAD_LEN+2] & 0xff) << 16;
+			bodyLen |= (buffArr[CONSTS.FIX_PREHEAD_LEN+3] & 0xff) << 24;
 			
 			if (buffLen < CONSTS.FIX_HEAD_LEN + bodyLen)
 				return;
