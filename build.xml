@@ -22,6 +22,7 @@
 
 	<target name="clean">
 		<delete dir="${build.dir}" />
+		<delete dir="${output.dir}" />
 	</target>
 
 	<target name="init">
@@ -56,7 +57,9 @@
 			</fileset>
 			
 			<manifest>
-				<attribute name="Main-Class" value="" />
+				<attribute name="Main-Class" value=""/>
+				<attribute name="Manifest-Version" value="${version}"/>
+				<attribute name="Conf-Path" value="resource/conf"/>
 			</manifest>
 		</jar>
 	</target>
