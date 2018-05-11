@@ -92,7 +92,7 @@ public class MetasvrConfigFactory {
 	
 	private void loadConfigInfo(String groupId) {
 		String initUrl = String.format("%s/%s/%s?%s", this.metasvrUrl.getNextUrl(), 
-				CONSTS.CACHE_SERVICE, CONSTS.FUN_GET_PROXY, "SERV_NAME="+groupId);
+				CONSTS.CACHE_SERVICE, CONSTS.FUN_GET_PROXY, "SERV_ID="+groupId);
 		SVarObject sVarInvoke = new SVarObject();
 		boolean retInvoke = HttpUtils.getData(initUrl, sVarInvoke);
 		
