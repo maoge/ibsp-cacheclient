@@ -51,7 +51,7 @@ public class CONSTS {
 	public static final String CACHE_SERVICE           = "cachesvr";
 	
 	public static final String FUN_URL_TEST            = "test";
-	public static final String FUN_GET_PROXY           = "getDeployedProxyByServiceName";
+	public static final String FUN_GET_PROXY           = "getDeployedProxyByServiceID";
 	public static final String FUN_PUT_STATISTIC_INFO  = "putClientStatisticInfo";
 	
 	public static final int FIX_HEAD_LEN    = 10;
