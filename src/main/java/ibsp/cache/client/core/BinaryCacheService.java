@@ -3,7 +3,6 @@ package ibsp.cache.client.core;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ibsp.cache.client.config.Configuration;
 import ibsp.cache.client.config.MetasvrConfigFactory;
 import ibsp.cache.client.event.EventController;
 //import ibsp.cache.client.config.ZookeeperConfigFactory;
@@ -23,48 +22,35 @@ public class BinaryCacheService implements IBinaryCacheService {
 	protected static final Logger log = LoggerFactory.getLogger(BinaryCacheService.class);
 	protected static final Long   FAILED_RESULT = 0L;
 	protected static final Long   SUCCESS_RESULT = 1L;
-	private String[]                 innerGroupId;
-//	private static ZookeeperConfigFactory   zookeeperConfigFactory;
+	private String innerGroupId;
 	private static MetasvrConfigFactory metasvrConfigFactory;
 	
-	static {
-		Configuration.getInstance();
-	}
-	
-	public BinaryCacheService(String... groupId) {
-		this(groupId, Configuration.getInstance().getMetasvrUrl());
-	}
-
-	public BinaryCacheService(String[] groupId, String metasvrUrl) {
-		this.innerGroupId = groupId;
+	public BinaryCacheService(String serviceID, String metasvrUrl) {
+		this.innerGroupId = serviceID;
 		metasvrConfigFactory = MetasvrConfigFactory.getInstance(metasvrUrl);		
-    	for(String gId : groupId) {
-    		metasvrConfigFactory.addGroup( gId );
-    	}
+		metasvrConfigFactory.addGroup(serviceID);
     	//init EventController
     	EventController.getInstance();
 	}
 		
 	@Override
-	public String set(String groupId, String key, byte[] value) {
+	public String set(String key, byte[] value) {
 		CacheRequest<Set> request = new CacheRequest<Set>();
 		Set param = new Set();
 		param.setKey(key);
 		param.setByteValue(value);
 		request.setParam(param);
-		request.setGroupId(groupId);
 		CacheResponse resp = execute(request);
 		return resp.getCode();
 	}
 
 	@Override
-	public byte[] getBytes(String groupId, String key) {
+	public byte[] getBytes(String key) {
 		CacheRequest<Get> request = new CacheRequest<Get>();
 		Get param = new Get();
 		param.setKey(key);
 		param.setByteValue(true);
 		request.setParam(param);
-		request.setGroupId(groupId);
 		CacheResponse resp = execute(request);
 		if (resp.getCode().equals(CacheResponse.OK_CODE) && resp.getResult() != null) {
 			return (byte[])resp.getResult();
@@ -73,13 +59,12 @@ public class BinaryCacheService implements IBinaryCacheService {
 	}
 
 	@Override
-	public byte[] getSet(String groupId, String key, byte[] value) {
+	public byte[] getSet(String key, byte[] value) {
 		CacheRequest<Getset> request = new CacheRequest<Getset>();
 		Getset param = new Getset();
 		param.setKey(key);
 		param.setByteValue(value);
 		request.setParam(param);
-		request.setGroupId(groupId);
 		CacheResponse resp = execute(request);
 		if (resp.getCode().equals(CacheResponse.OK_CODE) && resp.getResult() != null) {
 			return (byte[])resp.getResult();
@@ -88,7 +73,7 @@ public class BinaryCacheService implements IBinaryCacheService {
 	}
 	
 	@Override
-	public String setex(String groupId, String key, int seconds, byte[] value) {
+	public String setex(String key, int seconds, byte[] value) {
 		CacheRequest<SetEx> request = new CacheRequest<SetEx>();
 		SetEx param = new SetEx();
 		param.setCommand("SETEX");
@@ -96,20 +81,18 @@ public class BinaryCacheService implements IBinaryCacheService {
 		param.setByteValue(value);
 		param.setSeconds(seconds);
 		request.setParam(param);
-		request.setGroupId(groupId);
 		CacheResponse resp = execute(request);
 		return resp.getCode();
 	}
 
 	@Override
-	public Long setnx(String groupId, String key, byte[] value) {
+	public Long setnx(String key, byte[] value) {
 		CacheRequest<SetNx> request = new CacheRequest<SetNx>();
 		SetNx param = new SetNx();
 		param.setCommand("SETNX");
 		param.setKey(key);
 		param.setByteValue(value);
 		request.setParam(param);
-		request.setGroupId(groupId);
 		CacheResponse resp = execute(request);
         if(CacheResponse.OK_CODE.equals(resp.getCode())) {
         	return (Long)resp.getResult();
@@ -121,12 +104,12 @@ public class BinaryCacheService implements IBinaryCacheService {
 		
 		CacheResponse response = null;
 		try {
-			
-			if(request.getGroupId()==null && innerGroupId.length > 1) {
-	            return CacheResponse.errorOf(request.getRequestId(), "缓存分组名称参数为空!");
-		    } else if (request.getGroupId()==null && innerGroupId.length == 1) {
-		        request.setGroupId( innerGroupId[0] );	
-		    }
+			if (request.getGroupId() == null) {
+				if (innerGroupId == null)
+					return CacheResponse.errorOf(request.getRequestId(), "缓存分组名称参数为空!");
+				
+				request.setGroupId(innerGroupId);
+			}
 		    
 	        if(!metasvrConfigFactory.hasGroupId( request.getGroupId() )) {
 	        	return CacheResponse.errorOf(request.getRequestId(), "缓存分组名称参数与默认分组名称不符!");

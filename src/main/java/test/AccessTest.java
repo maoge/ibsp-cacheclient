@@ -29,21 +29,19 @@ public class AccessTest {
     private static class Sender implements Runnable {
         private CacheService service;
         private String threadName;
-        private String groupid;
         private AtomicLong normalCnt;
         private AtomicLong errorCnt;
         private byte[] sendBuf;
         private CountDownLatch latch;
         
-        public Sender(String groupid, String threadName, AtomicLong normalCnt, AtomicLong errorCnt,
+        public Sender(String threadName, AtomicLong normalCnt, AtomicLong errorCnt,
             CountDownLatch latch, int packLen) {
             
-            this.service = CacheService.getInstance(groupid);
+            this.service = CacheService.getInstance();
             this.threadName = threadName;
             this.normalCnt = normalCnt;
             this.errorCnt = errorCnt;
             this.latch = latch;
-            this.groupid = groupid;
             
             sendBuf = new byte[packLen];
             for (int i = 0; i < packLen; i++) {
@@ -67,21 +65,21 @@ public class AccessTest {
                     try {
                         key = String.format("%s:%d", threadName, System.nanoTime());
 
-                        String resultSet = service.set(groupid, key, sendBuf);
+                        String resultSet = service.set(key, sendBuf);
                         if (resultSet.equals("0")) {
                             normalCnt.incrementAndGet();
                         } else {
                             errorCnt.incrementAndGet();
                         }
 
-                        String resultGet = service.get(groupid, key);
+                        String resultGet = service.get(key);
                         if (resultGet != null) {
                             normalCnt.incrementAndGet();
                         } else {
                             errorCnt.incrementAndGet();
                         }
                         
-                        long resultDel = service.del(groupid, key);
+                        long resultDel = service.del(key);
                         if (resultDel == 1L) {
                             normalCnt.incrementAndGet();
                         } else {
@@ -110,7 +108,7 @@ public class AccessTest {
         }
     }
 
-    public void testMultiThread(String groupid, int totalTime, int totalThreadCnt, int packLen) throws Exception {
+    public void testMultiThread(int totalTime, int totalThreadCnt, int packLen) throws Exception {
         
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date date = new Date(System.currentTimeMillis());
@@ -137,8 +135,7 @@ public class AccessTest {
         
         for (; threadIdx < totalThreadCnt; threadIdx++) {
             String threadName = "SenderThread" + (threadIdx < 10 ? "0" : "") + threadIdx;      
-            Sender sender = new Sender(groupid, threadName,
-                normalCntVec[threadIdx], errorCntVec[threadIdx], shutdownLatch, packLen);
+            Sender sender = new Sender(threadName, normalCntVec[threadIdx], errorCntVec[threadIdx], shutdownLatch, packLen);
             Thread t = new Thread(sender);
             t.start();
             theadVec.add(sender);
@@ -191,8 +188,7 @@ public class AccessTest {
             int totalTime = Integer.valueOf(p.getProperty("totalTime"));
             int totalThreadCnt = Integer.valueOf(p.getProperty("totalThreadCnt"));
             int packLen = Integer.valueOf(p.getProperty("packLen"));
-            String groupid = p.getProperty("groupid");
-            testMultiThread(groupid, totalTime, totalThreadCnt, packLen);
+            testMultiThread(totalTime, totalThreadCnt, packLen);
 		} catch (Exception e) {
 			logger.error("Test failed!", e);
 		}
