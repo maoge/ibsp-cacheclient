@@ -23,13 +23,11 @@ public class CONSTS {
 	}
 	
 	public static final String DEFAULT_LOCK_PRE = "__GLOABAL__:__LOCK__PRE__:";
-
-//	public static final String CONS_ZOOKEEPER_HOST = "zookeeper.host";
-//	public static final String CONS_ZOOKEEPER_ROOT_PATH = "zookeeper.root.path";
-    public static final String REDIS_PROXY_TIMEOUT = "redis.proxy.timeout";
-	public static final String POOL_SIZE= "pool.size";
-	public static final String CONNECTION_MODE = "connection.mode";
-	public static final String CONS_SERVICE_NAME = "service.name";
+	public static final String CACHE_PROP_FILE = "ibsp";
+    public static final String REDIS_PROXY_TIMEOUT = "cache.redis.proxy.timeout";
+	public static final String POOL_SIZE = "cache.pool.size";
+	public static final String CONNECTION_MODE = "cache.connection.mode";
+	public static final String CONS_SERVICE_ID = "cache.service.id";
 	public static final String CONS_METASVR_ROOTURL = "metasvr.rooturl";
 	
 	public static final Charset CHARSET = Charset.forName("UTF-8");

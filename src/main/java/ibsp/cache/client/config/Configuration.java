@@ -12,27 +12,29 @@ public class Configuration {
 	private static final ReentrantLock monitor = new ReentrantLock();
 	private static Configuration instance = null;
 	
-	private int poolSize = 1;
+	private int poolSize          = 1;
 	private String connectionMode = "sync";
 	private int redisProxyTimeout = 30;
-	private String metasvrUrl = "";
+	private String metasvrUrl     = "";
+	private String serviceID      = "";
 	
     public static Configuration getInstance() {
     	monitor.lock();
     	try {
             if(instance==null) instance = new Configuration();;
-    	}finally {
+    	} finally {
     		monitor.unlock();
     	}
     	return instance;
     }
     
 	private Configuration() {
-		PropertiesUtils pUtils = PropertiesUtils.getInstance("cache.properties");
-		this.poolSize = pUtils.getInt(CONSTS.POOL_SIZE, 1);
-		this.connectionMode = pUtils.get(CONSTS.CONNECTION_MODE, "sync");
+		PropertiesUtils pUtils = PropertiesUtils.getInstance(CONSTS.CACHE_PROP_FILE);
+		this.poolSize          = pUtils.getInt(CONSTS.POOL_SIZE, 1);
+		this.connectionMode    = pUtils.get(CONSTS.CONNECTION_MODE, "sync");
         this.redisProxyTimeout = pUtils.getInt(CONSTS.REDIS_PROXY_TIMEOUT, 30);
-        this.metasvrUrl = pUtils.get(CONSTS.CONS_METASVR_ROOTURL, "");
+        this.metasvrUrl        = pUtils.get(CONSTS.CONS_METASVR_ROOTURL, "");
+        this.serviceID         = pUtils.get(CONSTS.CONS_SERVICE_ID, "");
 	}
 
 	public int getPoolSize() {
@@ -49,6 +51,10 @@ public class Configuration {
 
 	public String getMetasvrUrl() {
 		return metasvrUrl;
+	}
+	
+	public String getServiceID() {
+		return serviceID;
 	}
 	
 }
