@@ -27,7 +27,7 @@ public class FunctionTest {
     private String groupid;
 
     public FunctionTest() throws IOException {
-        InputStream in = new BufferedInputStream(new FileInputStream("conf/init.properties"));
+        InputStream in = new BufferedInputStream(new FileInputStream("conf/test.properties"));
         Properties p = new Properties();
         p.load(in);
         this.groupid = p.getProperty("groupid");

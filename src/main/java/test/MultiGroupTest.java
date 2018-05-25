@@ -184,7 +184,7 @@ public class MultiGroupTest {
 	public void run() {
 		try {
 			PropertyConfigurator.configure("conf/log4j.properties");
-			InputStream in = new BufferedInputStream(new FileInputStream("conf/init.properties"));
+			InputStream in = new BufferedInputStream(new FileInputStream("conf/test.properties"));
 
 			Properties p = new Properties();
             p.load(in);
