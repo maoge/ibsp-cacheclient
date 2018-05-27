@@ -5,26 +5,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ibsp.cache.client.connection.AsyncConnection;
 import ibsp.cache.client.connection.AsyncConversion;
 import ibsp.cache.client.connection.LongConnection;
 import ibsp.cache.client.connection.SyncConnection;
 import ibsp.cache.client.connection.SyncConversion;
+import ibsp.cache.client.exception.RedisConnectionException;
+import ibsp.cache.client.exception.RedisDataException;
+import ibsp.cache.client.protocol.BuilderFactory;
+import ibsp.cache.client.protocol.Protocol;
+import ibsp.cache.client.protocol.RedisInputStream;
+import ibsp.cache.client.protocol.SafeEncoder;
 import ibsp.cache.client.utils.ByteUtil;
-import redis.clients.jedis.BuilderFactory;
-import redis.clients.jedis.Protocol;
-import redis.clients.jedis.exceptions.JedisConnectionException;
-import redis.clients.jedis.exceptions.JedisDataException;
-import redis.clients.util.RedisInputStream;
-import redis.clients.util.SafeEncoder;
 
 public class NJedisConnection {
-	
+
 	public static final Logger logger = LoggerFactory.getLogger(NJedisConnection.class);
 	protected LongConnection connection;
-	
+
 	public NJedisConnection(String host, int port, boolean isSync) {
 		if (isSync) {
 			this.connection = new SyncConnection(host, port, new SyncConversion());
@@ -32,7 +33,7 @@ public class NJedisConnection {
 			this.connection = new AsyncConnection(host, port, new AsyncConversion());
 		}
 	}
-	
+
 	public NJedisConnection(String host, int port, int timeOut, boolean isSync) {
 		if (isSync) {
 			this.connection = new SyncConnection(host, port, new SyncConversion(), timeOut);
@@ -41,18 +42,18 @@ public class NJedisConnection {
 		}
 	}
 
-    public NJedisConnection(String host, int port, int timeOut, String connectionName, boolean isSync) {
+	public NJedisConnection(String host, int port, int timeOut, String connectionName, boolean isSync) {
 		if (isSync) {
 			this.connection = new SyncConnection(host, port, new SyncConversion(), timeOut, connectionName);
 		} else {
 			this.connection = new AsyncConnection(host, port, new AsyncConversion(), timeOut, connectionName);
 		}
-    }
-    
-    public void setExceptionList(Map<Exception, String> excepts) {
-    	this.connection.setExceptionList(excepts);
-    }
-	
+	}
+
+	public void setExceptionList(Map<Exception, String> excepts) {
+		this.connection.setExceptionList(excepts);
+	}
+
 	public String getStatusCodeReply(final byte[] resp1) {
 		flush();
 		final byte[] dresp = (byte[]) readProtocolWithCheckingBroken(resp1);
@@ -111,22 +112,23 @@ public class NJedisConnection {
 	}
 
 	protected void flush() {
-		//		try {
-		////			outputStream.flush();
-		//		} catch (IOException ex) {
-		//			broken = true;
-		//			throw new JedisConnectionException(ex);
-		//		}
+		// try {
+		//// outputStream.flush();
+		// } catch (IOException ex) {
+		// broken = true;
+		// throw new JedisConnectionException(ex);
+		// }
 	}
 
 	protected Object readProtocolWithCheckingBroken(byte[] resp) {
 		try {
 			return Protocol.read(new RedisInputStream(new ByteArrayInputStream(resp)));
-		} catch (JedisConnectionException exc) {
-			logger.error("unecpected："+new String(resp) + ":"+ByteUtil.Bytes2HexString(resp), exc);
+		} catch (RedisConnectionException exc) {
+			logger.error("unecpected：" + new String(resp) + ":" + ByteUtil.Bytes2HexString(resp), exc);
 			throw exc;
-		} catch (JedisDataException edc) {
-			logger.error("unecpected："+new String(resp)+":"+ByteUtil.Bytes2HexString(resp)+",message:" + edc.getMessage(), edc);
+		} catch (RedisDataException edc) {
+			logger.error("unecpected：" + new String(resp) + ":" + ByteUtil.Bytes2HexString(resp) + ",message:"
+					+ edc.getMessage(), edc);
 			throw edc;
 		}
 	}
@@ -136,7 +138,7 @@ public class NJedisConnection {
 		for (int i = 0; i < count; i++) {
 			try {
 				responses.add(readProtocolWithCheckingBroken(resp));
-			} catch (JedisDataException e) {
+			} catch (RedisDataException e) {
 				responses.add(e);
 			}
 		}

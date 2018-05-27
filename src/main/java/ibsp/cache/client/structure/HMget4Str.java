@@ -2,8 +2,8 @@ package ibsp.cache.client.structure;
 
 import java.util.List;
 
-import redis.clients.util.SafeEncoder;
 import ibsp.cache.client.core.NJedis;
+import ibsp.cache.client.protocol.SafeEncoder;
 import ibsp.cache.client.utils.CONSTS.DataType;
 
 public class HMget4Str extends Operate<List<byte[]>, NJedis> {

@@ -14,10 +14,10 @@ import ibsp.cache.client.core.ProxyRedisOutputStream;
 import ibsp.cache.client.core.Respond;
 import ibsp.cache.client.exception.ProxyRedisException;
 import ibsp.cache.client.exception.ProxyRedisException.PROXYERROR;
+import ibsp.cache.client.protocol.Protocol;
+import ibsp.cache.client.protocol.RedisOutputStream;
+import ibsp.cache.client.protocol.SafeEncoder;
 import ibsp.cache.client.utils.CONSTS;
-import redis.clients.jedis.Protocol;
-import redis.clients.util.RedisOutputStream;
-import redis.clients.util.SafeEncoder;
 
 public abstract class ParaConversion {
 	public static final Logger logger = LoggerFactory.getLogger(ParaConversion.class);
@@ -91,7 +91,7 @@ public abstract class ParaConversion {
 		jedisout.write(SPLIT_BYTES);
 		writeLong(jedisout, reqId);
 		jedisout.write(SPLIT_BYTES);
-		jedisout.writeIntCrLf(respLen);	
+		jedisout.writeIntCrLf(respLen);
 		
 		if (para.getArgs() == null || para.getArgs().length == 0) {
 			Protocol.sendCommand(jedisout, para.getCommand());

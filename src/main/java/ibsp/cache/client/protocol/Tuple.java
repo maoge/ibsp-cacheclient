@@ -1,8 +1,6 @@
-package ibsp.cache.client.utils;
+package ibsp.cache.client.protocol;
 
 import java.util.Arrays;
-
-import ibsp.cache.client.protocol.ByteUtil;
 
 public class Tuple implements Comparable<Tuple> {
   private byte[] element;

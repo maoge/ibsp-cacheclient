@@ -3,8 +3,8 @@ package ibsp.cache.client.structure;
 import java.util.HashMap;
 import java.util.Map;
 
-import redis.clients.jedis.BinaryJedisCommands;
-import redis.clients.util.SafeEncoder;
+import ibsp.cache.client.command.BinaryJedisCommands;
+import ibsp.cache.client.protocol.SafeEncoder;
 
 public class ZAdd extends Operate<Long, BinaryJedisCommands> {
 

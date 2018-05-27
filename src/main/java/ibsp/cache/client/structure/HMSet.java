@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import redis.clients.jedis.BinaryJedisCommands;
-import redis.clients.util.SafeEncoder;
+import ibsp.cache.client.command.BinaryJedisCommands;
+import ibsp.cache.client.protocol.SafeEncoder;
 
 public class HMSet extends Operate<String, BinaryJedisCommands> {
 	private Map<String ,String> hash;

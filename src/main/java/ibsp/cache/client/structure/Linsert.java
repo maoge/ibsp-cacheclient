@@ -1,8 +1,8 @@
 package ibsp.cache.client.structure;
 
-import redis.clients.jedis.BinaryClient.LIST_POSITION;
-import redis.clients.jedis.BinaryJedisCommands;
-import redis.clients.util.SafeEncoder;
+import ibsp.cache.client.command.BinaryClient.LIST_POSITION;
+import ibsp.cache.client.command.BinaryJedisCommands;
+import ibsp.cache.client.protocol.SafeEncoder;
 
 public class Linsert extends Operate<Long, BinaryJedisCommands> {
 	private byte[] pivot;

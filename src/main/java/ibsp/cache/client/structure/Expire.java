@@ -1,8 +1,8 @@
 package ibsp.cache.client.structure;
 
-import redis.clients.jedis.BinaryJedisCommands;
-import redis.clients.jedis.Protocol;
-import redis.clients.util.SafeEncoder;
+import ibsp.cache.client.command.BinaryJedisCommands;
+import ibsp.cache.client.protocol.Protocol;
+import ibsp.cache.client.protocol.SafeEncoder;
 
 public class Expire extends Operate<Long, BinaryJedisCommands> {
 

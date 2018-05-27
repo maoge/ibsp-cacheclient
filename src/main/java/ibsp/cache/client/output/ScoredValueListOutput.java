@@ -2,7 +2,7 @@ package ibsp.cache.client.output;
 
 import ibsp.cache.client.codec.RedisCodec;
 import ibsp.cache.client.protocol.CommandOutput;
-import ibsp.cache.client.utils.ScoredValue;
+import ibsp.cache.client.protocol.ScoredValue;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

@@ -2,8 +2,8 @@ package ibsp.cache.client.structure;
 
 import java.util.Set;
 
-import redis.clients.jedis.BinaryJedisCommands;
-import redis.clients.util.SafeEncoder;
+import ibsp.cache.client.command.BinaryJedisCommands;
+import ibsp.cache.client.protocol.SafeEncoder;
 
 public class ZRange extends Operate<Set<byte[]>, BinaryJedisCommands> {
 	private long start; 

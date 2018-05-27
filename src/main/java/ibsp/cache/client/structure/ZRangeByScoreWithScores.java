@@ -2,9 +2,9 @@ package ibsp.cache.client.structure;
 
 import java.util.Set;
 
-import redis.clients.jedis.BinaryJedisCommands;
-import redis.clients.jedis.Tuple;
-import redis.clients.util.SafeEncoder;
+import ibsp.cache.client.command.BinaryJedisCommands;
+import ibsp.cache.client.protocol.SafeEncoder;
+import ibsp.cache.client.protocol.Tuple;
 
 public class ZRangeByScoreWithScores extends Operate<Set<Tuple>, BinaryJedisCommands> {
 	private double max;

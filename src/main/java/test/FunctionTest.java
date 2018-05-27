@@ -17,8 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ibsp.cache.client.core.CacheService;
-import ibsp.cache.client.protocol.ScanResult;
-import ibsp.cache.client.utils.Tuple;
+import ibsp.cache.client.protocol.Tuple;
 
 public class FunctionTest {
     
@@ -46,7 +45,6 @@ public class FunctionTest {
             TC_005();
             TC_0051();
             TC_006();
-            TC_008();
             
             date = new Date(System.currentTimeMillis());
             logger.info("FunctionTest end at: "+format.format(date));
@@ -879,21 +877,7 @@ public class FunctionTest {
             logger.info("getSet(byte)测试失败："+e.getMessage());
         }
     }
-    public void TC_008() {
-        String hashKey = "hash001";
-        /** HSCAN **/       
-        try {
-            ScanResult<Map<byte[], byte[]>> result = cacheService.hscan(hashKey, "0");
-            if (result!=null) {
-                logger.info("hscan测试通过！");
-            } else {
-                logger.info("hscan测试失败！返回值错误。");
-            }     
-        } catch (Exception e) {
-            logger.info("hscan测试失败："+e.getMessage());
-        }
-    }
-    
+
     public static void main(String[] args) throws Exception {
     	new FunctionTest().run();
     	Thread.sleep(100);

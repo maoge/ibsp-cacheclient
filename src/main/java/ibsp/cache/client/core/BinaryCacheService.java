@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import ibsp.cache.client.config.MetasvrConfigFactory;
 import ibsp.cache.client.event.EventController;
-//import ibsp.cache.client.config.ZookeeperConfigFactory;
 import ibsp.cache.client.exception.CacheServiceException;
 import ibsp.cache.client.exception.CacheServiceException.CacheServiceErrorInfo;
 import ibsp.cache.client.pool.ConnectionPool;

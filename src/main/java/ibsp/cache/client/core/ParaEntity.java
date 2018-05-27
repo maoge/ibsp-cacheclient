@@ -1,6 +1,6 @@
 package ibsp.cache.client.core;
 
-import redis.clients.jedis.Protocol.Command;
+import ibsp.cache.client.protocol.Protocol.Command;
 
 public class ParaEntity {
 	private Command command;

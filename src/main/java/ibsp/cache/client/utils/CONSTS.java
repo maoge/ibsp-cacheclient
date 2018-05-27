@@ -2,11 +2,6 @@ package ibsp.cache.client.utils;
 
 import java.nio.charset.Charset;
 
-/***
- * 常量定义
- * @author 
- *
- */
 public class CONSTS {
 
 	public enum DataType {

@@ -1,7 +1,7 @@
 package ibsp.cache.client.structure;
 
+import ibsp.cache.client.command.BinaryJedisCommands;
 import ibsp.cache.client.protocol.ByteUtil;
-import redis.clients.jedis.BinaryJedisCommands;
 
 public class Ltrim extends Operate<String,BinaryJedisCommands> {
 	private long start;

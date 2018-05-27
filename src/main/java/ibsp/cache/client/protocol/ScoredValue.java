@@ -1,9 +1,5 @@
-package ibsp.cache.client.utils;
+package ibsp.cache.client.protocol;
 
-/**
- *
- * @author ThinkPad
- */
 public class ScoredValue<V> {
     public final double score;
     public final V value;

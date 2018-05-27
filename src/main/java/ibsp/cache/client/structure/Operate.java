@@ -5,8 +5,8 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ibsp.cache.client.command.BinaryJedisCommands;
 import ibsp.cache.client.utils.CONSTS.DataType;
-import redis.clients.jedis.BinaryJedisCommands;
 
 public abstract class Operate<T, E extends BinaryJedisCommands> implements IExecutor<T, E> {
 	public static final Long DEFAULT_ERROR = -1L;
@@ -23,9 +23,6 @@ public abstract class Operate<T, E extends BinaryJedisCommands> implements IExec
 	
 
 	final public String getKey() {
-//		if(getGroupId()!=null) {
-//			return getGroupId() + SPLIT + key; 
-//		}
 		return key;
 	}
 

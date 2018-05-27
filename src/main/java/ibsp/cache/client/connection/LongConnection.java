@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import ibsp.cache.client.connection.ParaConversion;
 import ibsp.cache.client.core.Nheader;
 import ibsp.cache.client.core.ParaEntity;
-import redis.clients.jedis.Protocol.Command;
+import ibsp.cache.client.protocol.Protocol.Command;
 
 public abstract class LongConnection {
 

@@ -1,7 +1,7 @@
 package ibsp.cache.client.structure;
 
 import ibsp.cache.client.core.NJedis;
-import redis.clients.util.SafeEncoder;
+import ibsp.cache.client.protocol.SafeEncoder;
 
 public class MSet extends Operate<String, NJedis> {
 	private String[] keysvalues;

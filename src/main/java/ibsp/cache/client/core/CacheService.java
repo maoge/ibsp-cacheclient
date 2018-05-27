@@ -7,8 +7,7 @@ import java.util.Set;
 
 import ibsp.cache.client.config.Configuration;
 import ibsp.cache.client.protocol.ByteUtil;
-import ibsp.cache.client.protocol.ScanParams;
-import ibsp.cache.client.protocol.ScanResult;
+import ibsp.cache.client.protocol.Tuple;
 import ibsp.cache.client.structure.Append;
 import ibsp.cache.client.structure.CacheRequest;
 import ibsp.cache.client.structure.CacheResponse;
@@ -32,7 +31,6 @@ import ibsp.cache.client.structure.HLen;
 import ibsp.cache.client.structure.HMSet;
 import ibsp.cache.client.structure.HMget;
 import ibsp.cache.client.structure.HMget4Bit;
-import ibsp.cache.client.structure.HScan;
 import ibsp.cache.client.structure.HSet;
 import ibsp.cache.client.structure.HSetnx;
 import ibsp.cache.client.structure.HVals;
@@ -78,34 +76,33 @@ import ibsp.cache.client.structure.ZRemrangeByRank;
 import ibsp.cache.client.structure.ZRemrangeByScore;
 import ibsp.cache.client.structure.ZScore;
 import ibsp.cache.client.utils.CONSTS;
-import ibsp.cache.client.utils.Tuple;
 
 /**
- * 缓存层接口API实现类(单例 since v1.2.0) 
+ * 缓存层接口API实现类(单例 since v1.2.0)
  * 
  */
 public class CacheService extends BinaryCacheService implements ICacheService {
-	
+
 	private static CacheService instance = null;
 	private static Object mtx = new Object();
-	
+
 	public static CacheService getInstance() {
 		if (instance != null)
 			return instance;
-		synchronized(mtx) {
-			if (instance==null) {
+		synchronized (mtx) {
+			if (instance == null) {
 				Configuration config = Configuration.getInstance();
 				instance = new CacheService(config.getServiceID(), config.getMetasvrUrl());
 			}
 		}
 		return instance;
 	}
-	
+
 	public static CacheService getInstance(String serviceID, String metasvrUrl) {
 		if (instance != null)
 			return instance;
-		synchronized(mtx) {
-			if (instance==null) {
+		synchronized (mtx) {
+			if (instance == null) {
 				instance = new CacheService(serviceID, metasvrUrl);
 			}
 		}
@@ -115,7 +112,7 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 	private CacheService(String serviceID, String metasvrUrl) {
 		super(serviceID, metasvrUrl);
 	}
-	
+
 	public void close() {
 		if (instance != null) {
 			instance = null;
@@ -131,29 +128,29 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		request.setParam(param);
 		CacheResponse resp = execute(request);
 		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Boolean)resp.getResult();
+			return (Boolean) resp.getResult();
 		}
 		return false;
 	}
 
-//	@Override
-//	public Long del(final String groupId, final String... keys) {
-//		long result = FAILED_RESULT;
-//		for(String key : keys) {
-//			result = del(groupId, key);
-//		}
-//		return result;
-//	}
+	// @Override
+	// public Long del(final String groupId, final String... keys) {
+	// long result = FAILED_RESULT;
+	// for(String key : keys) {
+	// result = del(groupId, key);
+	// }
+	// return result;
+	// }
 
 	@Override
 	public Long del(final String key) {
-		CacheRequest<Del> request = new CacheRequest<Del>();		
+		CacheRequest<Del> request = new CacheRequest<Del>();
 		Del param = new Del();
 		param.setKey(key);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -166,7 +163,7 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		request.setParam(param);
 		CacheResponse resp = execute(request);
 		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (String)resp.getResult();
+			return (String) resp.getResult();
 		}
 		return null;
 	}
@@ -179,8 +176,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setSeconds(seconds);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			 return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -192,9 +189,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		getParam.setKey(oldkey);
 		request.setParam(getParam);
 		CacheResponse resp = execute(request);
-		if (CacheResponse.OK_CODE.equals(resp.getCode()) && resp.getResult() != null){
+		if (CacheResponse.OK_CODE.equals(resp.getCode()) && resp.getResult() != null) {
 			del(oldkey);
-			return set(newkey, (String)resp.getResult());
+			return set(newkey, (String) resp.getResult());
 		}
 		return CacheResponse.ERROR_CODE;
 	}
@@ -206,7 +203,7 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		getParam.setKey(oldkey);
 		request.setParam(getParam);
 		CacheResponse resp = execute(request);
-		if (CacheResponse.OK_CODE.equals(resp.getCode()) && resp.getResult() != null){
+		if (CacheResponse.OK_CODE.equals(resp.getCode()) && resp.getResult() != null) {
 			del(oldkey);
 			return setnx(newkey, resp.getResult().toString());
 		}
@@ -220,8 +217,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		persist.setKey(key);
 		request.setParam(persist);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			 return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -233,8 +230,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		ttl.setKey(key);
 		request.setParam(ttl);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -246,9 +243,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		pexpire.setKey(key);
 		pexpire.setMilliseconds(milliseconds);
 		request.setParam(pexpire);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			 return (Long)resp.getResult();
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -260,8 +257,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		pttl.setKey(key);
 		request.setParam(pttl);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -299,7 +296,7 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		request.setParam(param);
 		CacheResponse resp = execute(request);
 		if (CacheResponse.OK_CODE.equals(resp.getCode()) && resp.getResult() != null) {
-			return ByteUtil.encode((byte[])resp.getResult());
+			return ByteUtil.encode((byte[]) resp.getResult());
 		}
 		return null;
 	}
@@ -311,8 +308,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		strlen.setKey(key);
 		request.setParam(strlen);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -324,9 +321,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		append.setKey(key);
 		append.setValue(value);
 		request.setParam(append);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -338,9 +335,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		decrby.setKey(key);
 		decrby.setInteger(decrement);
 		request.setParam(decrby);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -351,9 +348,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		Decr decr = new Decr();
 		decr.setKey(key);
 		request.setParam(decr);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -366,8 +363,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		getrange.setStartOffset(startOffset);
 		getrange.setEndOffset(endOffset);
 		request.setParam(getrange);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
 			return (byte[]) resp.getResult();
 		}
 		return null;
@@ -380,8 +377,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		getset.setKey(key);
 		getset.setValue(value);
 		request.setParam(getset);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
 			return (byte[]) resp.getResult();
 		}
 		return null;
@@ -393,9 +390,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		Incr incr = new Incr();
 		incr.setKey(key);
 		request.setParam(incr);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -407,9 +404,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		incrby.setKey(key);
 		incrby.setInteger(increment);
 		request.setParam(incrby);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -422,7 +419,7 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setSeconds(seconds);
 		param.setValue(value);
 		request.setParam(param);
-		CacheResponse resp = execute(request);	
+		CacheResponse resp = execute(request);
 		return resp.getCode();
 	}
 
@@ -434,8 +431,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setValue(value);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			 return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -449,8 +446,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		setrange.setOffset(offset);
 		request.setParam(setrange);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -462,9 +459,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		lindex.setKey(key);
 		lindex.setIndex(index);
 		request.setParam(lindex);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return new String((byte[])resp.getResult());
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return new String((byte[]) resp.getResult());
 		}
 		return null;
 	}
@@ -478,9 +475,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		linsert.setBefore(before);
 		linsert.setPivot(ByteUtil.encode(pivot));
 		request.setParam(linsert);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -492,8 +489,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		llen.setKey(key);
 		request.setParam(llen);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -504,9 +501,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		Lpop lpop = new Lpop();
 		lpop.setKey(key);
 		request.setParam(lpop);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return new String((byte[])resp.getResult());
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return new String((byte[]) resp.getResult());
 		}
 		return null;
 	}
@@ -519,8 +516,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		lpush.setValues(values);
 		request.setParam(lpush);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -533,8 +530,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		lpushx.setValues(values);
 		request.setParam(lpushx);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -548,9 +545,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		lrange.setStart(start);
 		lrange.setEnd(end);
 		request.setParam(lrange);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (List<byte[]>)resp.getResult();
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (List<byte[]>) resp.getResult();
 		}
 		return null;
 	}
@@ -564,8 +561,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		lrem.setCount(count);
 		request.setParam(lrem);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -578,8 +575,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		lset.setValue(ByteUtil.encode(value));
 		lset.setIndex(index);
 		request.setParam(lset);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
 			return resp.getResult().toString();
 		}
 		return null;
@@ -593,8 +590,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		ltrim.setStart(start);
 		ltrim.setEnd(end);
 		request.setParam(ltrim);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
 			return resp.getResult().toString();
 		}
 		return null;
@@ -606,9 +603,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		Rpop rpop = new Rpop();
 		rpop.setKey(key);
 		request.setParam(rpop);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return new String((byte[])resp.getResult());
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return new String((byte[]) resp.getResult());
 		}
 		return null;
 	}
@@ -621,8 +618,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		rpush.setValues(values);
 		request.setParam(rpush);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -635,8 +632,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		rpushx.setValues(value);
 		request.setParam(rpushx);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -649,8 +646,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setFields(fields);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -663,8 +660,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setField(field);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Boolean)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Boolean) resp.getResult();
 		}
 		return false;
 	}
@@ -677,8 +674,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setField(field);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (String)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (String) resp.getResult();
 		}
 		return null;
 	}
@@ -691,22 +688,22 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setField(field);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (byte[])resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (byte[]) resp.getResult();
 		}
-		return null;	    
+		return null;
 	}
 
-	@SuppressWarnings("unchecked")	
+	@SuppressWarnings("unchecked")
 	@Override
 	public Set<String> hkeys(final String key) {
 		CacheRequest<HKeys> request = new CacheRequest<HKeys>();
 		HKeys param = new HKeys();
 		param.setKey(key);
 		request.setParam(param);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Set<String>)resp.getResult();
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Set<String>) resp.getResult();
 		}
 		return null;
 	}
@@ -720,8 +717,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setValue(value);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -734,8 +731,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setHash(hash);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (String)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (String) resp.getResult();
 		}
 		return null;
 	}
@@ -747,9 +744,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		HGetall hgetall = new HGetall();
 		hgetall.setKey(key);
 		request.setParam(hgetall);
-		CacheResponse resp = execute(request);		
-		if (CacheResponse.OK_CODE.equals(resp.getCode()) ){
-			return (Map<String, String>)resp.getResult();
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Map<String, String>) resp.getResult();
 		}
 		return null;
 	}
@@ -761,9 +758,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		HGetall4Bit hgetall = new HGetall4Bit();
 		hgetall.setKey(ByteUtil.encode(key));
 		request.setParam(hgetall);
-		CacheResponse resp = execute(request);      
-		if (CacheResponse.OK_CODE.equals(resp.getCode()) ){
-			return (Map<byte[], byte[]>)resp.getResult();
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Map<byte[], byte[]>) resp.getResult();
 		}
 		return null;
 	}
@@ -777,8 +774,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		hincrby.setValue(value);
 		request.setParam(hincrby);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -790,13 +787,13 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		hlen.setKey(key);
 		request.setParam(hlen);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
 
-	@SuppressWarnings("unchecked")	
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<byte[]> hmgetBytes(final String key, final String... fields) {
 		CacheRequest<HMget4Bit> request = new CacheRequest<HMget4Bit>();
@@ -805,8 +802,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		hmget.setFields(fields);
 		request.setParam(hmget);
 		CacheResponse resp = execute(request);
-		if (CacheResponse.OK_CODE.equals(resp.getCode()) ){
-			return (List<byte[]>)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (List<byte[]>) resp.getResult();
 		}
 		return null;
 	}
@@ -820,10 +817,10 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		hmget.setFields(fields);
 		request.setParam(hmget);
 		CacheResponse resp = execute(request);
-		if (CacheResponse.OK_CODE.equals(resp.getCode()) ){
-			return (List<String>)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (List<String>) resp.getResult();
 		}
-		return null;	    
+		return null;
 	}
 
 	@Override
@@ -835,8 +832,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		hsetnx.setField(field);
 		request.setParam(hsetnx);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -846,11 +843,11 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 	public List<byte[]> hvals(String key) {
 		CacheRequest<HVals> request = new CacheRequest<HVals>();
 		HVals hvals = new HVals();
-		hvals.setKey(key);	
+		hvals.setKey(key);
 		request.setParam(hvals);
 		CacheResponse resp = execute(request);
-		if (CacheResponse.OK_CODE.equals(resp.getCode()) ){
-			return (List<byte[]>)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (List<byte[]>) resp.getResult();
 		}
 		return null;
 	}
@@ -863,8 +860,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setMembers(members);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -876,8 +873,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setKey(key);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -890,8 +887,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setMember(member);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Boolean)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Boolean) resp.getResult();
 		}
 		return false;
 	}
@@ -904,8 +901,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setKey(key);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Set<byte[]>)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Set<byte[]>) resp.getResult();
 		}
 		return null;
 	}
@@ -918,8 +915,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setMembers(members);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -933,10 +930,10 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setScore(score);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-        if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-            return (Long)resp.getResult();
-        }
-        return FAILED_RESULT;
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
+		}
+		return FAILED_RESULT;
 	}
 
 	@Override
@@ -947,10 +944,10 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setScoreMembers(scoreMembers);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-        if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-            return (Long)resp.getResult();
-        }
-        return FAILED_RESULT;
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
+		}
+		return FAILED_RESULT;
 	}
 
 	@Override
@@ -960,8 +957,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setKey(key);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -975,8 +972,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setMin(min);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -990,8 +987,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setMember(member);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Double)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Double) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -1006,17 +1003,17 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setEnd(end);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			Set<Object> repSet=(Set<Object>)resp.getResult();
-        	Set<String> retSet=new LinkedHashSet<String>() ;
-        	for(Object obj:repSet){
-        		if(obj instanceof byte[]){
-        			retSet.add(new String((byte[])obj));
-        		}else{
-        			retSet.add((String)obj);
-        		}
-        	}
-            return retSet;
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			Set<Object> repSet = (Set<Object>) resp.getResult();
+			Set<String> retSet = new LinkedHashSet<String>();
+			for (Object obj : repSet) {
+				if (obj instanceof byte[]) {
+					retSet.add(new String((byte[]) obj));
+				} else {
+					retSet.add((String) obj);
+				}
+			}
+			return retSet;
 		}
 		return null;
 	}
@@ -1031,8 +1028,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setEnd(end);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Set<Tuple>)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Set<Tuple>) resp.getResult();
 		}
 		return null;
 	}
@@ -1047,17 +1044,17 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setMax(max);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			Set<Object> repSet=(Set<Object>)resp.getResult();
-        	Set<String> retSet=new LinkedHashSet<String>() ;
-        	for(Object obj:repSet){
-        		if(obj instanceof byte[]){
-        			retSet.add(new String((byte[])obj));
-        		}else{
-        			retSet.add((String)obj);
-        		}
-        	}
-            return retSet;      
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			Set<Object> repSet = (Set<Object>) resp.getResult();
+			Set<String> retSet = new LinkedHashSet<String>();
+			for (Object obj : repSet) {
+				if (obj instanceof byte[]) {
+					retSet.add(new String((byte[]) obj));
+				} else {
+					retSet.add((String) obj);
+				}
+			}
+			return retSet;
 		}
 		return null;
 	}
@@ -1074,17 +1071,17 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setCount(count);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			List<Object> repSet=(List<Object>)resp.getResult();
-			Set<String> retSet=new LinkedHashSet<String>() ;
-			for(Object obj : repSet){
-				if(obj instanceof byte[]){
-					retSet.add(new String((byte[])obj));
-				}else{
-					retSet.add((String)obj);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			List<Object> repSet = (List<Object>) resp.getResult();
+			Set<String> retSet = new LinkedHashSet<String>();
+			for (Object obj : repSet) {
+				if (obj instanceof byte[]) {
+					retSet.add(new String((byte[]) obj));
+				} else {
+					retSet.add((String) obj);
 				}
 			}
-			return retSet;            
+			return retSet;
 		}
 		return null;
 	}
@@ -1099,8 +1096,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setMin(min);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Set<Tuple>)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Set<Tuple>) resp.getResult();
 		}
 		return null;
 	}
@@ -1117,8 +1114,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setOffset(offset);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Set<Tuple>)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Set<Tuple>) resp.getResult();
 		}
 		return null;
 	}
@@ -1131,8 +1128,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setMembers(members);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -1145,8 +1142,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setMember(member);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Double)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Double) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -1160,8 +1157,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setEnd(end);
 		request.setParam(param);
 		CacheResponse resp = execute(request);
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
@@ -1174,41 +1171,20 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		param.setStart(start);
 		param.setEnd(end);
 		request.setParam(param);
-		CacheResponse resp = execute(request);		
-		if(CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (Long)resp.getResult();
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
 		}
 		return FAILED_RESULT;
 	}
 
 	@Override
-	public ScanResult<Map<byte[], byte[]>> hscan(String key, String cursor) {
-		return hscan(key, cursor, new ScanParams());
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public ScanResult<Map<byte[], byte[]>> hscan(String key, String cursor, ScanParams params) {
-		CacheRequest<HScan> request = new CacheRequest<HScan>();
-		HScan hscan = new HScan();
-		hscan.setKey(key);
-		hscan.setCursor(ByteUtil.encode(cursor));
-		hscan.setParams(params);
-		request.setParam(hscan);
-		CacheResponse resp = execute(request);		
-		if (CacheResponse.OK_CODE.equals(resp.getCode())){
-			return (ScanResult<Map<byte[], byte[]>>)resp.getResult();
-		}
-		return null;
-	}
-
-	@Override
 	public boolean lock(String lockName, long expireTime) {
 		String key = CONSTS.DEFAULT_LOCK_PRE + lockName;
-		for(;;) {
+		for (;;) {
 			if (setnx(key, "locked") == 1) { // 获得锁
 				if (expireTime > 0) { // 设置失效时间
-					expire(key, (int)expireTime);
+					expire(key, (int) expireTime);
 				}
 				break; // 退出循环
 			}
@@ -1223,9 +1199,9 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		return true;
 	}
 
-
 	@Override
 	public boolean unlock(String lockName) {
 		return del(CONSTS.DEFAULT_LOCK_PRE + lockName) > 0 ? true : false;
 	}
+
 }

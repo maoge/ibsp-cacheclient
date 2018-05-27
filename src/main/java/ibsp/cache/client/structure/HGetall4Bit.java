@@ -3,8 +3,8 @@ package ibsp.cache.client.structure;
 import java.util.Map;
 
 import ibsp.cache.client.utils.CONSTS.DataType;
-import redis.clients.jedis.BinaryJedisCommands;
-import redis.clients.util.SafeEncoder;
+import ibsp.cache.client.command.BinaryJedisCommands;
+import ibsp.cache.client.protocol.SafeEncoder;
 
 public class HGetall4Bit extends Operate<Map<byte[], byte[]>, BinaryJedisCommands> {
 

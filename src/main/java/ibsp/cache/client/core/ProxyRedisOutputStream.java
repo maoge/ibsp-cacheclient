@@ -3,7 +3,7 @@ package ibsp.cache.client.core;
 import java.io.OutputStream;
 import java.util.concurrent.locks.Lock;
 
-import redis.clients.util.RedisOutputStream;
+import ibsp.cache.client.protocol.RedisOutputStream;
 
 public class ProxyRedisOutputStream {
 	

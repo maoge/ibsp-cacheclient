@@ -1,17 +1,24 @@
 package ibsp.cache.client.core;
 
-import redis.clients.jedis.BinaryClient.LIST_POSITION;
-import redis.clients.jedis.Protocol;
-import redis.clients.jedis.Protocol.Command;
-import redis.clients.jedis.Protocol.Keyword;
-import redis.clients.jedis.BitOP;
-import redis.clients.jedis.BitPosParams;
-import redis.clients.jedis.DebugParams;
-import redis.clients.jedis.ScanParams;
-import redis.clients.jedis.SortingParams;
-import redis.clients.jedis.ZParams;
-import redis.clients.jedis.exceptions.JedisException;
-import redis.clients.util.SafeEncoder;
+import static ibsp.cache.client.protocol.Protocol.toByteArray;
+import static ibsp.cache.client.protocol.Protocol.Command.BITOP;
+import static ibsp.cache.client.protocol.Protocol.Command.CLIENT;
+import static ibsp.cache.client.protocol.Protocol.Command.DUMP;
+import static ibsp.cache.client.protocol.Protocol.Command.HINCRBYFLOAT;
+import static ibsp.cache.client.protocol.Protocol.Command.PEXPIRE;
+import static ibsp.cache.client.protocol.Protocol.Command.PEXPIREAT;
+import static ibsp.cache.client.protocol.Protocol.Command.PING;
+import static ibsp.cache.client.protocol.Protocol.Command.PSETEX;
+import static ibsp.cache.client.protocol.Protocol.Command.PTTL;
+import static ibsp.cache.client.protocol.Protocol.Command.RESTORE;
+import static ibsp.cache.client.protocol.Protocol.Command.SRANDMEMBER;
+import static ibsp.cache.client.protocol.Protocol.Command.TIME;
+import static ibsp.cache.client.protocol.Protocol.Command.WAIT;
+import static ibsp.cache.client.protocol.Protocol.Keyword.LIMIT;
+import static ibsp.cache.client.protocol.Protocol.Keyword.NO;
+import static ibsp.cache.client.protocol.Protocol.Keyword.ONE;
+import static ibsp.cache.client.protocol.Protocol.Keyword.STORE;
+import static ibsp.cache.client.protocol.Protocol.Keyword.WITHSCORES;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,23 +26,29 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeoutException;
 
+import ibsp.cache.client.command.BinaryClient.LIST_POSITION;
+import ibsp.cache.client.exception.RedisException;
+import ibsp.cache.client.protocol.BitOP;
+import ibsp.cache.client.protocol.BitPosParams;
+import ibsp.cache.client.protocol.Protocol;
+import ibsp.cache.client.protocol.SafeEncoder;
+import ibsp.cache.client.protocol.SortingParams;
+import ibsp.cache.client.protocol.ZParams;
+import ibsp.cache.client.protocol.Protocol.Command;
+import ibsp.cache.client.protocol.Protocol.Keyword;
 import ibsp.cache.client.utils.CONSTS;
 
-import static redis.clients.jedis.Protocol.Command.*;
-import static redis.clients.jedis.Protocol.Keyword.*;
-import static redis.clients.jedis.Protocol.toByteArray;
-
 public class NBinaryClient extends NJedisConnection {
-	
+
 	private boolean isInMulti;
 	private int db;
 	private boolean isInWatch;
 	private ThreadLocal<Nheader> groupInfo = new ThreadLocal<Nheader>();
 
-    public NBinaryClient(String host, int port, int timeOut, String connectionName, boolean isSync) {
-        super(host, port, timeOut, connectionName, isSync);
-    }
-	
+	public NBinaryClient(String host, int port, int timeOut, String connectionName, boolean isSync) {
+		super(host, port, timeOut, connectionName, isSync);
+	}
+
 	public NBinaryClient(String host, int port, int timeOut, boolean isSync) {
 		super(host, port, timeOut, isSync);
 	}
@@ -43,19 +56,19 @@ public class NBinaryClient extends NJedisConnection {
 	public NBinaryClient(String host, int port, boolean isSync) {
 		super(host, port, isSync);
 	}
-	
-	public void setCurrentHeader(Nheader header){
+
+	public void setCurrentHeader(Nheader header) {
 		groupInfo.set(header);
-	}	
-	
-	protected Nheader getCurrentHeader(){
+	}
+
+	protected Nheader getCurrentHeader() {
 		return groupInfo.get();
 	}
-	
-	public void removeCurrentHeader(){
+
+	public void removeCurrentHeader() {
 		groupInfo.remove();
 	}
-	
+
 	public boolean isInMulti() {
 		return isInMulti;
 	}
@@ -75,70 +88,68 @@ public class NBinaryClient extends NJedisConnection {
 		this.db = db;
 	}
 
-	public byte[] sendCommand(Command cmd)  {
+	public byte[] sendCommand(Command cmd) {
 		try {
 			return this.connection.call(new ParaEntity(cmd, getCurrentHeader()));
-		}catch (InterruptedException e) {
-			throw new JedisException("连接异常", e);
-		}catch (TimeoutException e) {
-			throw new JedisException(e.getMessage(), e);
-		}finally {
+		} catch (InterruptedException e) {
+			throw new RedisException("连接异常", e);
+		} catch (TimeoutException e) {
+			throw new RedisException(e.getMessage(), e);
+		} finally {
 			removeCurrentHeader();
 		}
 	}
-	
-	public byte[] sendCommand(Command cmd, int timeout)  {
+
+	public byte[] sendCommand(Command cmd, int timeout) {
 		try {
 			return this.connection.call(new ParaEntity(cmd, getCurrentHeader()), timeout);
-		}  catch (InterruptedException e) {
-			throw new JedisException("连接异常", e);
-		}catch (TimeoutException e) {
-			throw new JedisException(e.getMessage(), e);
-		}finally {
+		} catch (InterruptedException e) {
+			throw new RedisException("连接异常", e);
+		} catch (TimeoutException e) {
+			throw new RedisException(e.getMessage(), e);
+		} finally {
 			removeCurrentHeader();
 		}
 	}
-	
+
 	public byte[] sendCommand(Command cmd, final byte[]... args) {
 		try {
 			return this.connection.call(new ParaEntity(cmd, getCurrentHeader(), args));
 		} catch (InterruptedException e) {
-			throw new JedisException("连接异常", e);
-		}catch (TimeoutException e) {
-			throw new JedisException(e.getMessage(), e);
-		}finally {
+			throw new RedisException("连接异常", e);
+		} catch (TimeoutException e) {
+			throw new RedisException(e.getMessage(), e);
+		} finally {
 			removeCurrentHeader();
 		}
 	}
-	
-	
+
 	public byte[] sendCommand(Command cmd, int timeout, final byte[]... args) {
 		try {
-			return this.connection.call(new ParaEntity(cmd, getCurrentHeader(), args),timeout);
+			return this.connection.call(new ParaEntity(cmd, getCurrentHeader(), args), timeout);
 		} catch (InterruptedException e) {
-			throw new JedisException("连接异常", e);
-		}catch (TimeoutException e) {
-			throw new JedisException(e.getMessage(), e);
-		}finally {
+			throw new RedisException("连接异常", e);
+		} catch (TimeoutException e) {
+			throw new RedisException(e.getMessage(), e);
+		} finally {
 			removeCurrentHeader();
 		}
 	}
-	
-	public byte[] sendCommand(Command cmd, final String... args)  {
+
+	public byte[] sendCommand(Command cmd, final String... args) {
 		final byte[][] bargs = SafeEncoder.encodeMany(args);
-		return sendCommand(cmd,bargs);
+		return sendCommand(cmd, bargs);
 	}
-	
-	public byte[] ping()  {
+
+	public byte[] ping() {
 		return sendCommand(PING);
 	}
 
-	public byte[] set(final byte[] key, final byte[] value)  {
+	public byte[] set(final byte[] key, final byte[] value) {
 		return sendCommand(Command.SET, key, value);
 	}
 
-	public byte[] set(final byte[] key, final byte[] value,
-			final byte[] nxxx, final byte[] expx, final long time)  {
+	public byte[] set(final byte[] key, final byte[] value, final byte[] nxxx, final byte[] expx, final long time) {
 		return sendCommand(Command.SET, key, value, nxxx, expx, toByteArray(time));
 	}
 
@@ -175,13 +186,11 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.RANDOMKEY);
 	}
 
-	public byte[] rename(final byte[] oldkey,
-			final byte[] newkey) {
+	public byte[] rename(final byte[] oldkey, final byte[] newkey) {
 		return sendCommand(Command.RENAME, oldkey, newkey);
 	}
 
-	public byte[] renamenx(final byte[] oldkey,
-			final byte[] newkey) {
+	public byte[] renamenx(final byte[] oldkey, final byte[] newkey) {
 		return sendCommand(Command.RENAMENX, oldkey, newkey);
 	}
 
@@ -189,13 +198,11 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.DBSIZE);
 	}
 
-	public byte[] expire(final byte[] key,
-			final int seconds) {
+	public byte[] expire(final byte[] key, final int seconds) {
 		return sendCommand(Command.EXPIRE, key, toByteArray(seconds));
 	}
 
-	public byte[] expireAt(final byte[] key,
-			final long unixTime) {
+	public byte[] expireAt(final byte[] key, final long unixTime) {
 		return sendCommand(Command.EXPIREAT, key, toByteArray(unixTime));
 	}
 
@@ -215,8 +222,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.FLUSHALL);
 	}
 
-	public byte[] getSet(final byte[] key,
-			final byte[] value) {
+	public byte[] getSet(final byte[] key, final byte[] value) {
 		return sendCommand(Command.GETSET, key, value);
 	}
 
@@ -224,13 +230,11 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.MGET, keys);
 	}
 
-	public byte[] setnx(final byte[] key,
-			final byte[] value) {
+	public byte[] setnx(final byte[] key, final byte[] value) {
 		return sendCommand(Command.SETNX, key, value);
 	}
 
-	public byte[] setex(final byte[] key, final int seconds,
-			final byte[] value) {
+	public byte[] setex(final byte[] key, final int seconds, final byte[] value) {
 		return sendCommand(Command.SETEX, key, toByteArray(seconds), value);
 	}
 
@@ -242,8 +246,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.MSETNX, keysvalues);
 	}
 
-	public byte[] decrBy(final byte[] key,
-			final long integer) {
+	public byte[] decrBy(final byte[] key, final long integer) {
 		return sendCommand(Command.DECRBY, key, toByteArray(integer));
 	}
 
@@ -251,13 +254,11 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.DECR, key);
 	}
 
-	public byte[] incrBy(final byte[] key,
-			final long integer) {
+	public byte[] incrBy(final byte[] key, final long integer) {
 		return sendCommand(Command.INCRBY, key, toByteArray(integer));
 	}
 
-	public byte[] incrByFloat(final byte[] key,
-			final double value) {
+	public byte[] incrByFloat(final byte[] key, final double value) {
 		return sendCommand(Command.INCRBYFLOAT, key, toByteArray(value));
 	}
 
@@ -265,18 +266,15 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.INCR, key);
 	}
 
-	public byte[] append(final byte[] key,
-			final byte[] value) {
+	public byte[] append(final byte[] key, final byte[] value) {
 		return sendCommand(Command.APPEND, key, value);
 	}
 
-	public byte[] substr(final byte[] key, final int start,
-			final int end) {
+	public byte[] substr(final byte[] key, final int start, final int end) {
 		return sendCommand(Command.SUBSTR, key, toByteArray(start), toByteArray(end));
 	}
 
-	public byte[] hset(final byte[] key, final byte[] field,
-			final byte[] value) {
+	public byte[] hset(final byte[] key, final byte[] field, final byte[] value) {
 		return sendCommand(Command.HSET, key, field, value);
 	}
 
@@ -284,13 +282,11 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.HGET, key, field);
 	}
 
-	public byte[] hsetnx(final byte[] key, final byte[] field,
-			final byte[] value) {
+	public byte[] hsetnx(final byte[] key, final byte[] field, final byte[] value) {
 		return sendCommand(Command.HSETNX, key, field, value);
 	}
 
-	public byte[] hmset(final byte[] key,
-			final Map<byte[], byte[]> hash) {
+	public byte[] hmset(final byte[] key, final Map<byte[], byte[]> hash) {
 		final List<byte[]> params = new ArrayList<byte[]>();
 		params.add(key);
 
@@ -301,26 +297,22 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.HMSET, params.toArray(new byte[params.size()][]));
 	}
 
-	public byte[] hmget(final byte[] key,
-			final byte[]... fields) {
+	public byte[] hmget(final byte[] key, final byte[]... fields) {
 		final byte[][] params = new byte[fields.length + 1][];
 		params[0] = key;
 		System.arraycopy(fields, 0, params, 1, fields.length);
 		return sendCommand(Command.HMGET, params);
 	}
 
-	public byte[] hincrBy(final byte[] key,
-			final byte[] field, final long value) {
+	public byte[] hincrBy(final byte[] key, final byte[] field, final long value) {
 		return sendCommand(Command.HINCRBY, key, field, toByteArray(value));
 	}
 
-	public byte[] hexists(final byte[] key,
-			final byte[] field) {
+	public byte[] hexists(final byte[] key, final byte[] field) {
 		return sendCommand(Command.HEXISTS, key, field);
 	}
 
-	public byte[] hdel(final byte[] key,
-			final byte[]... fields) {
+	public byte[] hdel(final byte[] key, final byte[]... fields) {
 		return sendCommand(Command.HDEL, joinParameters(key, fields));
 	}
 
@@ -340,13 +332,11 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.HGETALL, key);
 	}
 
-	public byte[] rpush(final byte[] key,
-			final byte[]... strings) {
+	public byte[] rpush(final byte[] key, final byte[]... strings) {
 		return sendCommand(Command.RPUSH, joinParameters(key, strings));
 	}
 
-	public byte[] lpush(final byte[] key,
-			final byte[]... strings) {
+	public byte[] lpush(final byte[] key, final byte[]... strings) {
 		return sendCommand(Command.LPUSH, joinParameters(key, strings));
 	}
 
@@ -354,13 +344,11 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.LLEN, key);
 	}
 
-	public byte[] lrange(final byte[] key, final long start,
-			final long end) {
+	public byte[] lrange(final byte[] key, final long start, final long end) {
 		return sendCommand(Command.LRANGE, key, toByteArray(start), toByteArray(end));
 	}
 
-	public byte[] ltrim(final byte[] key, final long start,
-			final long end) {
+	public byte[] ltrim(final byte[] key, final long start, final long end) {
 		return sendCommand(Command.LTRIM, key, toByteArray(start), toByteArray(end));
 	}
 
@@ -368,13 +356,11 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.LINDEX, key, toByteArray(index));
 	}
 
-	public byte[] lset(final byte[] key, final long index,
-			final byte[] value) {
+	public byte[] lset(final byte[] key, final long index, final byte[] value) {
 		return sendCommand(Command.LSET, key, toByteArray(index), value);
 	}
 
-	public byte[] lrem(final byte[] key, long count,
-			final byte[] value) {
+	public byte[] lrem(final byte[] key, long count, final byte[] value) {
 		return sendCommand(Command.LREM, key, toByteArray(count), value);
 	}
 
@@ -386,13 +372,11 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.RPOP, key);
 	}
 
-	public byte[] rpoplpush(final byte[] srckey,
-			final byte[] dstkey) {
+	public byte[] rpoplpush(final byte[] srckey, final byte[] dstkey) {
 		return sendCommand(Command.RPOPLPUSH, srckey, dstkey);
 	}
 
-	public byte[] sadd(final byte[] key,
-			final byte[]... members) {
+	public byte[] sadd(final byte[] key, final byte[]... members) {
 		return sendCommand(Command.SADD, joinParameters(key, members));
 	}
 
@@ -400,8 +384,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.SMEMBERS, key);
 	}
 
-	public byte[] srem(final byte[] key,
-			final byte[]... members) {
+	public byte[] srem(final byte[] key, final byte[]... members) {
 		return sendCommand(Command.SREM, joinParameters(key, members));
 	}
 
@@ -413,8 +396,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.SPOP, key, toByteArray(count));
 	}
 
-	public byte[] smove(final byte[] srckey,
-			final byte[] dstkey, final byte[] member) {
+	public byte[] smove(final byte[] srckey, final byte[] dstkey, final byte[] member) {
 		return sendCommand(Command.SMOVE, srckey, dstkey, member);
 	}
 
@@ -422,8 +404,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.SCARD, key);
 	}
 
-	public byte[] sismember(final byte[] key,
-			final byte[] member) {
+	public byte[] sismember(final byte[] key, final byte[] member) {
 		return sendCommand(Command.SISMEMBER, key, member);
 	}
 
@@ -431,8 +412,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.SINTER, keys);
 	}
 
-	public byte[] sinterstore(final byte[] dstkey,
-			final byte[]... keys) {
+	public byte[] sinterstore(final byte[] dstkey, final byte[]... keys) {
 		final byte[][] params = new byte[keys.length + 1][];
 		params[0] = dstkey;
 		System.arraycopy(keys, 0, params, 1, keys.length);
@@ -443,8 +423,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.SUNION, keys);
 	}
 
-	public byte[] sunionstore(final byte[] dstkey,
-			final byte[]... keys) {
+	public byte[] sunionstore(final byte[] dstkey, final byte[]... keys) {
 		byte[][] params = new byte[keys.length + 1][];
 		params[0] = dstkey;
 		System.arraycopy(keys, 0, params, 1, keys.length);
@@ -455,8 +434,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.SDIFF, keys);
 	}
 
-	public byte[] sdiffstore(final byte[] dstkey,
-			final byte[]... keys) {
+	public byte[] sdiffstore(final byte[] dstkey, final byte[]... keys) {
 		byte[][] params = new byte[keys.length + 1][];
 		params[0] = dstkey;
 		System.arraycopy(keys, 0, params, 1, keys.length);
@@ -467,19 +445,16 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.SRANDMEMBER, key);
 	}
 
-	public byte[] zadd(final byte[] key, final double score,
-			final byte[] member) {
+	public byte[] zadd(final byte[] key, final double score, final byte[] member) {
 		return sendCommand(Command.ZADD, key, toByteArray(score), member);
 	}
 
-	public byte[] zaddBinary(final byte[] key,
-			final Map<byte[], Double> scoreMembers) {
+	public byte[] zaddBinary(final byte[] key, final Map<byte[], Double> scoreMembers) {
 
-		ArrayList<byte[]> args = new ArrayList<byte[]>(
-				scoreMembers.size() * 2 + 1);
+		ArrayList<byte[]> args = new ArrayList<byte[]>(scoreMembers.size() * 2 + 1);
 		args.add(key);
 
-		for (Map.Entry<byte[], Double> entry : scoreMembers.entrySet()){
+		for (Map.Entry<byte[], Double> entry : scoreMembers.entrySet()) {
 			args.add(toByteArray(entry.getValue()));
 			args.add(entry.getKey());
 		}
@@ -490,54 +465,43 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.ZADD, argsArray);
 	}
 
-	public byte[] zrange(final byte[] key, final long start,
-			final long end) {
+	public byte[] zrange(final byte[] key, final long start, final long end) {
 		return sendCommand(Command.ZRANGE, key, toByteArray(start), toByteArray(end));
 	}
 
-	public byte[] zrem(final byte[] key,
-			final byte[]... members) {
+	public byte[] zrem(final byte[] key, final byte[]... members) {
 		return sendCommand(Command.ZREM, joinParameters(key, members));
 	}
 
-	public byte[] zincrby(final byte[] key,
-			final double score, final byte[] member) {
+	public byte[] zincrby(final byte[] key, final double score, final byte[] member) {
 		return sendCommand(Command.ZINCRBY, key, toByteArray(score), member);
 	}
 
-	public byte[] zrank(final byte[] key,
-			final byte[] member) {
+	public byte[] zrank(final byte[] key, final byte[] member) {
 		return sendCommand(Command.ZRANK, key, member);
 	}
 
-	public byte[] zrevrank(final byte[] key,
-			final byte[] member) {
+	public byte[] zrevrank(final byte[] key, final byte[] member) {
 		return sendCommand(Command.ZREVRANK, key, member);
 	}
 
-	public byte[] zrevrange(final byte[] key,
-			final long start, final long end) {
+	public byte[] zrevrange(final byte[] key, final long start, final long end) {
 		return sendCommand(Command.ZREVRANGE, key, toByteArray(start), toByteArray(end));
 	}
 
-	public byte[] zrangeWithScores(final byte[] key,
-			final long start, final long end) {
-		return sendCommand(Command.ZRANGE, key, toByteArray(start), toByteArray(end),
-				WITHSCORES.raw);
+	public byte[] zrangeWithScores(final byte[] key, final long start, final long end) {
+		return sendCommand(Command.ZRANGE, key, toByteArray(start), toByteArray(end), WITHSCORES.raw);
 	}
 
-	public byte[] zrevrangeWithScores(final byte[] key,
-			final long start, final long end) {
-		return sendCommand(Command.ZREVRANGE, key, toByteArray(start), toByteArray(end),
-				WITHSCORES.raw);
+	public byte[] zrevrangeWithScores(final byte[] key, final long start, final long end) {
+		return sendCommand(Command.ZREVRANGE, key, toByteArray(start), toByteArray(end), WITHSCORES.raw);
 	}
 
 	public byte[] zcard(final byte[] key) {
 		return sendCommand(Command.ZCARD, key);
 	}
 
-	public byte[] zscore(final byte[] key,
-			final byte[] member) {
+	public byte[] zscore(final byte[] key, final byte[] member) {
 		return sendCommand(Command.ZSCORE, key, member);
 	}
 
@@ -572,8 +536,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.SORT, key);
 	}
 
-	public byte[] sort(final byte[] key,
-			final SortingParams sortingParameters) {
+	public byte[] sort(final byte[] key, final SortingParams sortingParameters) {
 		final List<byte[]> args = new ArrayList<byte[]>();
 		args.add(key);
 		args.addAll(sortingParameters.getParams());
@@ -584,19 +547,16 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.BLPOP, args);
 	}
 
-
-	public byte[] blpop(final int timeout,
-			final byte[]... keys) {
+	public byte[] blpop(final int timeout, final byte[]... keys) {
 		final List<byte[]> args = new ArrayList<byte[]>();
-		for (final byte[] arg : keys){
+		for (final byte[] arg : keys) {
 			args.add(arg);
 		}
 		args.add(Protocol.toByteArray(timeout));
 		return blpop(args.toArray(new byte[args.size()][]));
 	}
 
-	public byte[] sort(final byte[] key,
-			final SortingParams sortingParameters, final byte[] dstkey) {
+	public byte[] sort(final byte[] key, final SortingParams sortingParameters, final byte[] dstkey) {
 		final List<byte[]> args = new ArrayList<byte[]>();
 		args.add(key);
 		args.addAll(sortingParameters.getParams());
@@ -605,8 +565,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.SORT, args.toArray(new byte[args.size()][]));
 	}
 
-	public byte[] sort(final byte[] key,
-			final byte[] dstkey) {
+	public byte[] sort(final byte[] key, final byte[] dstkey) {
 		return sendCommand(Command.SORT, key, STORE.raw, dstkey);
 	}
 
@@ -614,8 +573,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.BRPOP, args);
 	}
 
-	public byte[] brpop(final int timeout,
-			final byte[]... keys) {
+	public byte[] brpop(final int timeout, final byte[]... keys) {
 		final List<byte[]> args = new ArrayList<byte[]>();
 		for (final byte[] arg : keys) {
 			args.add(arg);
@@ -624,292 +582,183 @@ public class NBinaryClient extends NJedisConnection {
 		return brpop(args.toArray(new byte[args.size()][]));
 	}
 
-	public byte[] subscribe(final byte[]... channels) {
-		return sendCommand(Command.SUBSCRIBE, channels);
-	}
+	public byte[] zcount(final byte[] key, final double min, final double max) {
 
-	public byte[] publish(final byte[] channel,
-			final byte[] message) {
-		return sendCommand(Command.PUBLISH, channel, message);
-	}
-
-	public byte[] unsubscribe() {
-		return sendCommand(Command.UNSUBSCRIBE);
-	}
-
-	public byte[] unsubscribe(final byte[]... channels) {
-		return sendCommand(Command.UNSUBSCRIBE, channels);
-	}
-
-	public byte[] psubscribe(final byte[]... patterns) {
-		return sendCommand(Command.PSUBSCRIBE, patterns);
-	}
-
-	public byte[] punsubscribe() {
-		return sendCommand(Command.PUNSUBSCRIBE);
-	}
-
-	public byte[] punsubscribe(final byte[]... patterns) {
-		return sendCommand(Command.PUNSUBSCRIBE, patterns);
-	}
-
-	public byte[] pubsub(final byte[]... args) {
-		return sendCommand(Command.PUBSUB, args);
-	}
-
-	public byte[] zcount(final byte[] key, final double min,
-			final double max) {
-
-		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ?
-				"-inf".getBytes() :
-				toByteArray(min);
-		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ?
-				"+inf".getBytes() :
-				toByteArray(max);
+		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ? "-inf".getBytes() : toByteArray(min);
+		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ? "+inf".getBytes() : toByteArray(max);
 
 		return sendCommand(Command.ZCOUNT, key, byteArrayMin, byteArrayMax);
 	}
 
-	public byte[] zcount(final byte[] key, final byte min[],
-			final byte max[]) {
+	public byte[] zcount(final byte[] key, final byte min[], final byte max[]) {
 		return sendCommand(Command.ZCOUNT, key, min, max);
 	}
 
-	public byte[] zcount(final byte[] key, final String min,
-			final String max) {
+	public byte[] zcount(final byte[] key, final String min, final String max) {
 		return sendCommand(Command.ZCOUNT, key, min.getBytes(), max.getBytes());
 	}
 
-	public byte[] zrangeByScore(final byte[] key,
-			final double min, final double max) {
+	public byte[] zrangeByScore(final byte[] key, final double min, final double max) {
 
-		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ?
-				"-inf".getBytes() :
-				toByteArray(min);
-		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ?
-				"+inf".getBytes() :
-				toByteArray(max);
+		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ? "-inf".getBytes() : toByteArray(min);
+		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ? "+inf".getBytes() : toByteArray(max);
 
 		return sendCommand(Command.ZRANGEBYSCORE, key, byteArrayMin, byteArrayMax);
 	}
 
-	public byte[] zrangeByScore(final byte[] key,
-			final byte[] min, final byte[] max) {
+	public byte[] zrangeByScore(final byte[] key, final byte[] min, final byte[] max) {
 		return sendCommand(Command.ZRANGEBYSCORE, key, min, max);
 	}
 
-	public byte[] zrangeByScore(final byte[] key,
-			final String min, final String max) {
+	public byte[] zrangeByScore(final byte[] key, final String min, final String max) {
 		return sendCommand(Command.ZRANGEBYSCORE, key, min.getBytes(), max.getBytes());
 	}
 
-	public byte[] zrevrangeByScore(final byte[] key,
-			final double max, final double min) {
+	public byte[] zrevrangeByScore(final byte[] key, final double max, final double min) {
 
-		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ?
-				"-inf".getBytes() :
-				toByteArray(min);
-		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ?
-				"+inf".getBytes() :
-				toByteArray(max);
+		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ? "-inf".getBytes() : toByteArray(min);
+		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ? "+inf".getBytes() : toByteArray(max);
 
 		return sendCommand(Command.ZREVRANGEBYSCORE, key, byteArrayMax, byteArrayMin);
 	}
 
-	public byte[] zrevrangeByScore(final byte[] key,
-			final byte[] max, final byte[] min) {
+	public byte[] zrevrangeByScore(final byte[] key, final byte[] max, final byte[] min) {
 		return sendCommand(Command.ZREVRANGEBYSCORE, key, max, min);
 	}
 
-	public byte[] zrevrangeByScore(final byte[] key,
-			final String max, final String min) {
+	public byte[] zrevrangeByScore(final byte[] key, final String max, final String min) {
 		return sendCommand(Command.ZREVRANGEBYSCORE, key, max.getBytes(), min.getBytes());
 	}
 
-	public byte[] zrangeByScore(final byte[] key,
-			final double min, final double max, final int offset, int count) {
+	public byte[] zrangeByScore(final byte[] key, final double min, final double max, final int offset, int count) {
 
-		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ?
-				"-inf".getBytes() :
-				toByteArray(min);
-		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ?
-				"+inf".getBytes() :
-				toByteArray(max);
+		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ? "-inf".getBytes() : toByteArray(min);
+		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ? "+inf".getBytes() : toByteArray(max);
 
-		return sendCommand(Command.ZRANGEBYSCORE, key, byteArrayMin, byteArrayMax, LIMIT.raw,
+		return sendCommand(Command.ZRANGEBYSCORE, key, byteArrayMin, byteArrayMax, LIMIT.raw, toByteArray(offset),
+				toByteArray(count));
+	}
+
+	public byte[] zrangeByScore(final byte[] key, final String min, final String max, final int offset, int count) {
+
+		return sendCommand(Command.ZRANGEBYSCORE, key, min.getBytes(), max.getBytes(), LIMIT.raw, toByteArray(offset),
+				toByteArray(count));
+	}
+
+	public byte[] zrevrangeByScore(final byte[] key, final double max, final double min, final int offset, int count) {
+
+		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ? "-inf".getBytes() : toByteArray(min);
+		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ? "+inf".getBytes() : toByteArray(max);
+
+		return sendCommand(Command.ZREVRANGEBYSCORE, key, byteArrayMax, byteArrayMin, LIMIT.raw, toByteArray(offset),
+				toByteArray(count));
+	}
+
+	public byte[] zrevrangeByScore(final byte[] key, final String max, final String min, final int offset, int count) {
+
+		return sendCommand(Command.ZREVRANGEBYSCORE, key, max.getBytes(), min.getBytes(), LIMIT.raw,
 				toByteArray(offset), toByteArray(count));
 	}
 
-	public byte[] zrangeByScore(final byte[] key,
-			final String min, final String max, final int offset, int count) {
+	public byte[] zrangeByScoreWithScores(final byte[] key, final double min, final double max) {
 
-		return sendCommand(Command.ZRANGEBYSCORE, key, min.getBytes(), max.getBytes(),
-				LIMIT.raw, toByteArray(offset), toByteArray(count));
+		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ? "-inf".getBytes() : toByteArray(min);
+		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ? "+inf".getBytes() : toByteArray(max);
+
+		return sendCommand(Command.ZRANGEBYSCORE, key, byteArrayMin, byteArrayMax, WITHSCORES.raw);
 	}
 
-	public byte[] zrevrangeByScore(final byte[] key,
-			final double max, final double min, final int offset, int count) {
+	public byte[] zrangeByScoreWithScores(final byte[] key, final String min, final String max) {
 
-		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ?
-				"-inf".getBytes() :
-				toByteArray(min);
-		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ?
-				"+inf".getBytes() :
-				toByteArray(max);
-
-		return sendCommand(Command.ZREVRANGEBYSCORE, key, byteArrayMax, byteArrayMin,
-				LIMIT.raw, toByteArray(offset), toByteArray(count));
+		return sendCommand(Command.ZRANGEBYSCORE, key, min.getBytes(), max.getBytes(), WITHSCORES.raw);
 	}
 
-	public byte[] zrevrangeByScore(final byte[] key,
-			final String max, final String min, final int offset, int count) {
+	public byte[] zrevrangeByScoreWithScores(final byte[] key, final double max, final double min) {
 
-		return sendCommand(Command.ZREVRANGEBYSCORE, key, max.getBytes(), min.getBytes(),
-				LIMIT.raw, toByteArray(offset), toByteArray(count));
+		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ? "-inf".getBytes() : toByteArray(min);
+		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ? "+inf".getBytes() : toByteArray(max);
+
+		return sendCommand(Command.ZREVRANGEBYSCORE, key, byteArrayMax, byteArrayMin, WITHSCORES.raw);
 	}
 
-	public byte[] zrangeByScoreWithScores(final byte[] key,
-			final double min, final double max) {
-
-		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ?
-				"-inf".getBytes() :
-				toByteArray(min);
-		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ?
-				"+inf".getBytes() :
-				toByteArray(max);
-
-		return sendCommand(Command.ZRANGEBYSCORE, key, byteArrayMin, byteArrayMax,
-				WITHSCORES.raw);
+	public byte[] zrevrangeByScoreWithScores(final byte[] key, final String max, final String min) {
+		return sendCommand(Command.ZREVRANGEBYSCORE, key, max.getBytes(), min.getBytes(), WITHSCORES.raw);
 	}
 
-	public byte[] zrangeByScoreWithScores(final byte[] key,
-			final String min, final String max) {
-
-		return sendCommand(Command.ZRANGEBYSCORE, key, min.getBytes(), max.getBytes(),
-				WITHSCORES.raw);
-	}
-
-	public byte[] zrevrangeByScoreWithScores(final byte[] key,
-			final double max, final double min) {
-
-		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ?
-				"-inf".getBytes() :
-				toByteArray(min);
-		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ?
-				"+inf".getBytes() :
-				toByteArray(max);
-
-		return sendCommand(Command.ZREVRANGEBYSCORE, key, byteArrayMax, byteArrayMin,
-				WITHSCORES.raw);
-	}
-
-	public byte[] zrevrangeByScoreWithScores(final byte[] key,
-			final String max, final String min) {
-		return sendCommand(Command.ZREVRANGEBYSCORE, key, max.getBytes(), min.getBytes(),
-				WITHSCORES.raw);
-	}
-
-	public byte[] zrangeByScoreWithScores(final byte[] key,
-			final double min, final double max, final int offset,
+	public byte[] zrangeByScoreWithScores(final byte[] key, final double min, final double max, final int offset,
 			final int count) {
 
-		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ?
-				"-inf".getBytes() :
-				toByteArray(min);
-		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ?
-				"+inf".getBytes() :
-				toByteArray(max);
+		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ? "-inf".getBytes() : toByteArray(min);
+		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ? "+inf".getBytes() : toByteArray(max);
 
-		return sendCommand(Command.ZRANGEBYSCORE, key, byteArrayMin, byteArrayMax, LIMIT.raw,
+		return sendCommand(Command.ZRANGEBYSCORE, key, byteArrayMin, byteArrayMax, LIMIT.raw, toByteArray(offset),
+				toByteArray(count), WITHSCORES.raw);
+	}
+
+	public byte[] zrangeByScoreWithScores(final byte[] key, final String min, final String max, final int offset,
+			final int count) {
+		return sendCommand(Command.ZRANGEBYSCORE, key, min.getBytes(), max.getBytes(), LIMIT.raw, toByteArray(offset),
+				toByteArray(count), WITHSCORES.raw);
+	}
+
+	public byte[] zrevrangeByScoreWithScores(final byte[] key, final double max, final double min, final int offset,
+			final int count) {
+
+		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ? "-inf".getBytes() : toByteArray(min);
+		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ? "+inf".getBytes() : toByteArray(max);
+
+		return sendCommand(Command.ZREVRANGEBYSCORE, key, byteArrayMax, byteArrayMin, LIMIT.raw, toByteArray(offset),
+				toByteArray(count), WITHSCORES.raw);
+	}
+
+	public byte[] zrevrangeByScoreWithScores(final byte[] key, final String max, final String min, final int offset,
+			final int count) {
+
+		return sendCommand(Command.ZREVRANGEBYSCORE, key, max.getBytes(), min.getBytes(), LIMIT.raw,
 				toByteArray(offset), toByteArray(count), WITHSCORES.raw);
 	}
 
-	public byte[] zrangeByScoreWithScores(final byte[] key,
-			final String min, final String max, final int offset,
-			final int count) {
-		return sendCommand(Command.ZRANGEBYSCORE, key, min.getBytes(), max.getBytes(),
-				LIMIT.raw, toByteArray(offset), toByteArray(count),
-				WITHSCORES.raw);
+	public byte[] zrangeByScore(final byte[] key, final byte[] min, final byte[] max, final int offset, int count) {
+		return sendCommand(Command.ZRANGEBYSCORE, key, min, max, LIMIT.raw, toByteArray(offset), toByteArray(count));
 	}
 
-	public byte[] zrevrangeByScoreWithScores(final byte[] key,
-			final double max, final double min, final int offset,
-			final int count) {
-
-		byte byteArrayMin[] = (min == Double.NEGATIVE_INFINITY) ?
-				"-inf".getBytes() :
-				toByteArray(min);
-		byte byteArrayMax[] = (max == Double.POSITIVE_INFINITY) ?
-				"+inf".getBytes() :
-				toByteArray(max);
-
-		return sendCommand(Command.ZREVRANGEBYSCORE, key, byteArrayMax, byteArrayMin,
-				LIMIT.raw, toByteArray(offset), toByteArray(count),
-				WITHSCORES.raw);
+	public byte[] zrevrangeByScore(final byte[] key, final byte[] max, final byte[] min, final int offset, int count) {
+		return sendCommand(Command.ZREVRANGEBYSCORE, key, max, min, LIMIT.raw, toByteArray(offset), toByteArray(count));
 	}
 
-	public byte[] zrevrangeByScoreWithScores(final byte[] key,
-			final String max, final String min, final int offset,
-			final int count) {
-
-		return sendCommand(Command.ZREVRANGEBYSCORE, key, max.getBytes(), min.getBytes(),
-				LIMIT.raw, toByteArray(offset), toByteArray(count),
-				WITHSCORES.raw);
-	}
-
-	public byte[] zrangeByScore(final byte[] key,
-			final byte[] min, final byte[] max, final int offset, int count) {
-		return sendCommand(Command.ZRANGEBYSCORE, key, min, max, LIMIT.raw,
-				toByteArray(offset), toByteArray(count));
-	}
-
-	public byte[] zrevrangeByScore(final byte[] key,
-			final byte[] max, final byte[] min, final int offset, int count) {
-		return sendCommand(Command.ZREVRANGEBYSCORE, key, max, min, LIMIT.raw,
-				toByteArray(offset), toByteArray(count));
-	}
-
-	public byte[] zrangeByScoreWithScores(final byte[] key,
-			final byte[] min, final byte[] max) {
+	public byte[] zrangeByScoreWithScores(final byte[] key, final byte[] min, final byte[] max) {
 		return sendCommand(Command.ZRANGEBYSCORE, key, min, max, WITHSCORES.raw);
 	}
 
-	public byte[] zrevrangeByScoreWithScores(final byte[] key,
-			final byte[] max, final byte[] min) {
+	public byte[] zrevrangeByScoreWithScores(final byte[] key, final byte[] max, final byte[] min) {
 		return sendCommand(Command.ZREVRANGEBYSCORE, key, max, min, WITHSCORES.raw);
 	}
 
-	public byte[] zrangeByScoreWithScores(final byte[] key,
-			final byte[] min, final byte[] max, final int offset,
+	public byte[] zrangeByScoreWithScores(final byte[] key, final byte[] min, final byte[] max, final int offset,
 			final int count) {
-		return sendCommand(Command.ZRANGEBYSCORE, key, min, max, LIMIT.raw,
-				toByteArray(offset), toByteArray(count), WITHSCORES.raw);
+		return sendCommand(Command.ZRANGEBYSCORE, key, min, max, LIMIT.raw, toByteArray(offset), toByteArray(count),
+				WITHSCORES.raw);
 	}
 
-	public byte[] zrevrangeByScoreWithScores(final byte[] key,
-			final byte[] max, final byte[] min, final int offset,
+	public byte[] zrevrangeByScoreWithScores(final byte[] key, final byte[] max, final byte[] min, final int offset,
 			final int count) {
-		return sendCommand(Command.ZREVRANGEBYSCORE, key, max, min, LIMIT.raw,
-				toByteArray(offset), toByteArray(count), WITHSCORES.raw);
+		return sendCommand(Command.ZREVRANGEBYSCORE, key, max, min, LIMIT.raw, toByteArray(offset), toByteArray(count),
+				WITHSCORES.raw);
 	}
 
-	public byte[] zremrangeByRank(final byte[] key,
-			final long start, final long end) {
+	public byte[] zremrangeByRank(final byte[] key, final long start, final long end) {
 		return sendCommand(Command.ZREMRANGEBYRANK, key, toByteArray(start), toByteArray(end));
 	}
 
-	public byte[] zremrangeByScore(final byte[] key,
-			final byte[] start, final byte[] end) {
+	public byte[] zremrangeByScore(final byte[] key, final byte[] start, final byte[] end) {
 		return sendCommand(Command.ZREMRANGEBYSCORE, key, start, end);
 	}
 
-	public byte[] zremrangeByScore(final byte[] key,
-			final String start, final String end) {
+	public byte[] zremrangeByScore(final byte[] key, final String start, final String end) {
 		return sendCommand(Command.ZREMRANGEBYSCORE, key, start.getBytes(), end.getBytes());
 	}
 
-	public byte[] zunionstore(final byte[] dstkey,
-			final byte[]... sets) {
+	public byte[] zunionstore(final byte[] dstkey, final byte[]... sets) {
 		final byte[][] params = new byte[sets.length + 2][];
 		params[0] = dstkey;
 		params[1] = toByteArray(sets.length);
@@ -917,20 +766,18 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.ZUNIONSTORE, params);
 	}
 
-	public byte[] zunionstore(final byte[] dstkey,
-			final ZParams params, final byte[]... sets) {
+	public byte[] zunionstore(final byte[] dstkey, final ZParams params, final byte[]... sets) {
 		final List<byte[]> args = new ArrayList<byte[]>();
 		args.add(dstkey);
 		args.add(Protocol.toByteArray(sets.length));
-		for (final byte[] set : sets){
+		for (final byte[] set : sets) {
 			args.add(set);
 		}
 		args.addAll(params.getParams());
 		return sendCommand(Command.ZUNIONSTORE, args.toArray(new byte[args.size()][]));
 	}
 
-	public byte[] zinterstore(final byte[] dstkey,
-			final byte[]... sets) {
+	public byte[] zinterstore(final byte[] dstkey, final byte[]... sets) {
 		final byte[][] params = new byte[sets.length + 2][];
 		params[0] = dstkey;
 		params[1] = Protocol.toByteArray(sets.length);
@@ -938,48 +785,27 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.ZINTERSTORE, params);
 	}
 
-	public byte[] zinterstore(final byte[] dstkey,
-			final ZParams params, final byte[]... sets) {
+	public byte[] zinterstore(final byte[] dstkey, final ZParams params, final byte[]... sets) {
 		final List<byte[]> args = new ArrayList<byte[]>();
 		args.add(dstkey);
 		args.add(Protocol.toByteArray(sets.length));
-		for (final byte[] set : sets){
+		for (final byte[] set : sets) {
 			args.add(set);
 		}
 		args.addAll(params.getParams());
 		return sendCommand(Command.ZINTERSTORE, args.toArray(new byte[args.size()][]));
 	}
 
-	public byte[] zlexcount(final byte[] key,
-			final byte[] min, final byte[] max) {
+	public byte[] zlexcount(final byte[] key, final byte[] min, final byte[] max) {
 		return sendCommand(Command.ZLEXCOUNT, key, min, max);
 	}
 
-	public byte[] zrangeByLex(final byte[] key,
-			final byte[] min, final byte[] max) {
+	public byte[] zrangeByLex(final byte[] key, final byte[] min, final byte[] max) {
 		return sendCommand(Command.ZRANGEBYLEX, key, min, max);
 	}
 
-	public byte[] zrangeByLex(final byte[] key,
-			final byte[] min, final byte[] max, final int offset,
-			final int count) {
-		return sendCommand(Command.ZRANGEBYLEX, key, min, max, LIMIT.raw, toByteArray(offset),
-				toByteArray(count));
-	}
-
-	public void zrevrangeByLex(final byte[] key, final byte[] max,
-			final byte[] min) {
-		sendCommand(ZREVRANGEBYLEX, key, max, min);
-	}
-
-	public void zrevrangeByLex(final byte[] key, final byte[] max,
-			final byte[] min, final int offset, final int count) {
-		sendCommand(ZREVRANGEBYLEX, key, max, min, LIMIT.raw,
-				toByteArray(offset), toByteArray(count));
-	}
-
-	public void zremrangeByLex(byte[] key, byte[] min, byte[] max) {
-		sendCommand(ZREMRANGEBYLEX, key, min, max);
+	public byte[] zrangeByLex(final byte[] key, final byte[] min, final byte[] max, final int offset, final int count) {
+		return sendCommand(Command.ZRANGEBYLEX, key, min, max, LIMIT.raw, toByteArray(offset), toByteArray(count));
 	}
 
 	public byte[] save() {
@@ -1013,8 +839,6 @@ public class NBinaryClient extends NJedisConnection {
 	public byte[] monitor() {
 		return sendCommand(Command.MONITOR);
 	}
-	
-	
 
 	public byte[] slaveof(final String host, final int port) {
 		return sendCommand(Command.SLAVEOF, host, String.valueOf(port));
@@ -1028,8 +852,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.CONFIG, Keyword.GET.raw, pattern);
 	}
 
-	public byte[] configSet(final byte[] parameter,
-			final byte[] value) {
+	public byte[] configSet(final byte[] parameter, final byte[] value) {
 		return sendCommand(Command.CONFIG, Keyword.SET.raw, parameter, value);
 	}
 
@@ -1041,8 +864,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.SYNC);
 	}
 
-	public byte[] lpushx(final byte[] key,
-			final byte[]... string) {
+	public byte[] lpushx(final byte[] key, final byte[]... string) {
 		return sendCommand(Command.LPUSHX, joinParameters(key, string));
 	}
 
@@ -1050,8 +872,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.PERSIST, key);
 	}
 
-	public byte[] rpushx(final byte[] key,
-			final byte[]... string) {
+	public byte[] rpushx(final byte[] key, final byte[]... string) {
 		return sendCommand(Command.RPUSHX, joinParameters(key, string));
 	}
 
@@ -1059,17 +880,11 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.ECHO, string);
 	}
 
-	public byte[] linsert(final byte[] key,
-			final LIST_POSITION where, final byte[] pivot, final byte[] value) {
+	public byte[] linsert(final byte[] key, final LIST_POSITION where, final byte[] pivot, final byte[] value) {
 		return sendCommand(Command.LINSERT, key, where.raw, pivot, value);
 	}
 
-	public byte[] debug(final DebugParams params) {
-		return sendCommand(Command.DEBUG, params.getCommand());
-	}
-
-	public byte[] brpoplpush(final byte[] source,
-			final byte[] destination, final int timeout) {
+	public byte[] brpoplpush(final byte[] source, final byte[] destination, final int timeout) {
 		return sendCommand(Command.BRPOPLPUSH, source, destination, toByteArray(timeout));
 	}
 
@@ -1077,13 +892,11 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.CONFIG, Keyword.RESETSTAT.name());
 	}
 
-	public byte[] setbit(byte[] key, long offset,
-			byte[] value) {
+	public byte[] setbit(byte[] key, long offset, byte[] value) {
 		return sendCommand(Command.SETBIT, key, toByteArray(offset), value);
 	}
 
-	public byte[] setbit(byte[] key, long offset,
-			boolean value) {
+	public byte[] setbit(byte[] key, long offset, boolean value) {
 		return sendCommand(Command.SETBIT, key, toByteArray(offset), toByteArray(value));
 	}
 
@@ -1091,8 +904,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.GETBIT, key, toByteArray(offset));
 	}
 
-	public byte[] bitpos(final byte[] key,
-			final boolean value, final BitPosParams params) {
+	public byte[] bitpos(final byte[] key, final boolean value, final BitPosParams params) {
 		final List<byte[]> args = new ArrayList<byte[]>();
 		args.add(key);
 		args.add(toByteArray(value));
@@ -1100,25 +912,22 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.BITPOS, args.toArray(new byte[args.size()][]));
 	}
 
-	public byte[] setrange(byte[] key, long offset,
-			byte[] value) {
+	public byte[] setrange(byte[] key, long offset, byte[] value) {
 		return sendCommand(Command.SETRANGE, key, toByteArray(offset), value);
 	}
 
-	public byte[] getrange(byte[] key, long startOffset,
-			long endOffset) {
-		return sendCommand(Command.GETRANGE, key, toByteArray(startOffset),
-				toByteArray(endOffset));
+	public byte[] getrange(byte[] key, long startOffset, long endOffset) {
+		return sendCommand(Command.GETRANGE, key, toByteArray(startOffset), toByteArray(endOffset));
 	}
 
 	public int getDB() {
 		return db;
 	}
-	
+
 	public byte[] auth(final String password) {
 		return sendCommand(Command.AUTH, password.getBytes(CONSTS.CHARSET));
 	}
-	
+
 	public void close() {
 		this.connection.close();
 	}
@@ -1127,91 +936,6 @@ public class NBinaryClient extends NJedisConnection {
 		if (isInWatch())
 			return unwatch();
 		return null;
-	}
-	
-	public byte[] sendEvalCommand(Command command,
-			byte[] script, byte[] keyCount, byte[][] params) {
-
-		final byte[][] allArgs = new byte[params.length + 2][];
-
-		allArgs[0] = script;
-		allArgs[1] = keyCount;
-
-		for (int i = 0; i < params.length; i++)
-			allArgs[i + 2] = params[i];
-
-		return sendCommand(command, allArgs);
-	}
-
-	public byte[] sendEvalCommand(Command command,int timeout,
-			byte[] script, byte[] keyCount, byte[][] params) {
-
-		final byte[][] allArgs = new byte[params.length + 2][];
-
-		allArgs[0] = script;
-		allArgs[1] = keyCount;
-
-		for (int i = 0; i < params.length; i++)
-			allArgs[i + 2] = params[i];
-
-		return sendCommand(command,timeout, allArgs);
-	}
-
-	public byte[] eval(byte[] script, byte[] keyCount,
-			byte[][] params) {
-		return sendEvalCommand(Command.EVAL, script, keyCount, params);
-	}
-
-	public byte[] eval(byte[] script, int keyCount,
-			byte[]... params) {
-		return eval(script, toByteArray(keyCount), params);
-	}
-
-	public byte[] evalsha(byte[] sha1, byte[] keyCount,
-			byte[]... params) {
-		return sendEvalCommand(Command.EVALSHA, sha1, keyCount, params);
-	}
-
-	public byte[] evalsha(byte[] sha1, int keyCount,
-			byte[]... params) {
-		return sendEvalCommand(Command.EVALSHA, sha1, toByteArray(keyCount), params);
-	}
-
-	public byte[] scriptFlush() {
-		return sendCommand(Command.SCRIPT, Keyword.FLUSH.raw);
-	}
-
-	public byte[] scriptExists(byte[]... sha1) {
-		byte[][] args = new byte[sha1.length + 1][];
-		args[0] = Keyword.EXISTS.raw;
-		for (int i = 0; i < sha1.length; i++)
-			args[i + 1] = sha1[i];
-
-		return sendCommand(Command.SCRIPT, args);
-	}
-
-	public byte[] scriptLoad(byte[] script) {
-		return sendCommand(Command.SCRIPT, Keyword.LOAD.raw, script);
-	}
-
-	public byte[] scriptKill() {
-		return sendCommand(Command.SCRIPT, Keyword.KILL.raw);
-	}
-
-	public byte[] slowlogGet() {
-		return sendCommand(Command.SLOWLOG, Keyword.GET.raw);
-	}
-
-	public byte[] slowlogGet(long entries) {
-		return sendCommand(Command.SLOWLOG, Keyword.GET.raw, toByteArray(entries));
-	}
-
-	public byte[] slowlogReset() {
-		return sendCommand(Command.SLOWLOG, Keyword.RESET.raw);
-	}
-
-	public byte[] slowlogLen() {
-		return sendCommand(Command.SLOWLOG, Keyword.LEN.raw);
 	}
 
 	public byte[] objectRefcount(byte[] key) {
@@ -1234,8 +958,7 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(Command.BITCOUNT, key, toByteArray(start), toByteArray(end));
 	}
 
-	public byte[] bitop(BitOP op, byte[] destKey,
-			byte[]... srcKeys) {
+	public byte[] bitop(BitOP op, byte[] destKey, byte[]... srcKeys) {
 		Keyword kw = Keyword.AND;
 		int len = srcKeys.length;
 		switch (op) {
@@ -1264,31 +987,23 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(BITOP, bargs);
 	}
 
-	public byte[] sentinel(final byte[]... args) {
-		return sendCommand(SENTINEL, args);
-	}
-
 	public byte[] dump(final byte[] key) {
 		return sendCommand(DUMP, key);
 	}
 
-	public byte[] restore(final byte[] key, final int ttl,
-			final byte[] serializedValue) {
+	public byte[] restore(final byte[] key, final int ttl, final byte[] serializedValue) {
 		return sendCommand(RESTORE, key, toByteArray(ttl), serializedValue);
 	}
 
-	public byte[] pexpire(final String key,
-			final long milliseconds) {
+	public byte[] pexpire(final String key, final long milliseconds) {
 		return sendCommand(PEXPIRE, SafeEncoder.encode(key), toByteArray(milliseconds));
 	}
-	
-	public byte[] pexpire(final byte[] key,
-			final long milliseconds) {
+
+	public byte[] pexpire(final byte[] key, final long milliseconds) {
 		return sendCommand(PEXPIRE, key, toByteArray(milliseconds));
 	}
 
-	public byte[] pexpireAt(final byte[] key,
-			final long millisecondsTimestamp) {
+	public byte[] pexpireAt(final byte[] key, final long millisecondsTimestamp) {
 		return sendCommand(PEXPIREAT, key, toByteArray(millisecondsTimestamp));
 	}
 
@@ -1296,23 +1011,19 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(PTTL, key);
 	}
 
-	public byte[] psetex(final byte[] key,
-			final long milliseconds, final byte[] value) {
+	public byte[] psetex(final byte[] key, final long milliseconds, final byte[] value) {
 		return sendCommand(PSETEX, key, toByteArray(milliseconds), value);
 	}
 
-	public byte[] set(final byte[] key, final byte[] value,
-			final byte[] nxxx) {
+	public byte[] set(final byte[] key, final byte[] value, final byte[] nxxx) {
 		return sendCommand(Command.SET, key, value, nxxx);
 	}
 
-	public byte[] set(final byte[] key, final byte[] value,
-			final byte[] nxxx, final byte[] expx, final int time) {
+	public byte[] set(final byte[] key, final byte[] value, final byte[] nxxx, final byte[] expx, final int time) {
 		return sendCommand(Command.SET, key, value, nxxx, expx, toByteArray(time));
 	}
 
-	public byte[] srandmember(final byte[] key,
-			final int count) {
+	public byte[] srandmember(final byte[] key, final int count) {
 		return sendCommand(SRANDMEMBER, key, toByteArray(count));
 	}
 
@@ -1336,79 +1047,16 @@ public class NBinaryClient extends NJedisConnection {
 		return sendCommand(TIME);
 	}
 
-	public byte[] migrate(final byte[] host, final int port,
-			final byte[] key, final int destinationDb, final int timeout) {
-		return sendCommand(MIGRATE, host, toByteArray(port), key,
-				toByteArray(destinationDb), toByteArray(timeout));
-	}
-
-	public byte[] hincrByFloat(final byte[] key,
-			final byte[] field, double increment) {
+	public byte[] hincrByFloat(final byte[] key, final byte[] field, double increment) {
 		return sendCommand(HINCRBYFLOAT, key, field, toByteArray(increment));
-	}
-
-	public byte[] scan(final byte[] cursor,
-			final ScanParams params) {
-		final List<byte[]> args = new ArrayList<byte[]>();
-		args.add(cursor);
-		args.addAll(params.getParams());
-		return sendCommand(SCAN, args.toArray(new byte[args.size()][]));
-	}
-
-	public byte[] hscan(final byte[] key, final byte[] cursor,
-			final ScanParams params) {
-		final List<byte[]> args = new ArrayList<byte[]>();
-		args.add(key);
-		args.add(cursor);
-		args.addAll(params.getParams());
-		return sendCommand(HSCAN, args.toArray(new byte[args.size()][]));
-	}
-
-	public byte[] sscan(final byte[] key, final byte[] cursor,
-			final ScanParams params) {
-		final List<byte[]> args = new ArrayList<byte[]>();
-		args.add(key);
-		args.add(cursor);
-		args.addAll(params.getParams());
-		return sendCommand(SSCAN, args.toArray(new byte[args.size()][]));
-	}
-
-	public byte[] zscan(final byte[] key, final byte[] cursor,
-			final ScanParams params) {
-		final List<byte[]> args = new ArrayList<byte[]>();
-		args.add(key);
-		args.add(cursor);
-		args.addAll(params.getParams());
-		return sendCommand(ZSCAN, args.toArray(new byte[args.size()][]));
 	}
 
 	public byte[] waitReplicas(int replicas, long timeout) {
 		return sendCommand(WAIT, toByteArray(replicas), toByteArray(timeout));
 	}
 
-	public byte[] cluster(final byte[]... args) {
-		return sendCommand(CLUSTER, args);
-	}
-
 	public byte[] asking() {
 		return sendCommand(Command.ASKING);
 	}
 
-	public byte[] pfadd(final byte[] key,
-			final byte[]... elements) {
-		return sendCommand(PFADD, joinParameters(key, elements));
-	}
-
-	public byte[] pfcount(final byte[] key) {
-		return sendCommand(PFCOUNT, key);
-	}
-
-	public byte[] pfcount(final byte[]... keys) {
-		return sendCommand(PFCOUNT, keys);
-	}
-
-	public byte[] pfmerge(final byte[] destkey,
-			final byte[]... sourcekeys) {
-		return sendCommand(PFMERGE, joinParameters(destkey, sourcekeys));
-	}
 }

@@ -1,7 +1,7 @@
 package ibsp.cache.client.structure;
 
 import ibsp.cache.client.core.NBinaryJedis;
-import redis.clients.util.SafeEncoder;
+import ibsp.cache.client.protocol.SafeEncoder;
 
 public class Pttl extends Operate<Long, NBinaryJedis> {
 

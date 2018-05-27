@@ -9,14 +9,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import ibsp.cache.client.config.Configuration;
 import ibsp.cache.client.core.NJedis;
-import redis.clients.jedis.exceptions.JedisException;
+import ibsp.cache.client.exception.RedisException;
 
-
-/**
- * 异步连接池
- * @author xiaoyn
- * @since v1.0.17
- */
 public class AsyncConnectionPool extends ConnectionPool {
 	
 	private long checkerSleepTime = 2000;
@@ -170,7 +164,7 @@ public class AsyncConnectionPool extends ConnectionPool {
 								break;
 							} catch (Exception e) {
 								logger.warn("连接"+reference.get().getObject().getName()+"发送ping包失败: "+e.getMessage());
-								if(e instanceof JedisException) {
+								if(e instanceof RedisException) {
 				    				String errorMsg = e.getMessage();
 				    				if(errorMsg.indexOf("timeout")!=-1) {
 				    					continue;

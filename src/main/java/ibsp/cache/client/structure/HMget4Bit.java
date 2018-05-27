@@ -2,7 +2,7 @@ package ibsp.cache.client.structure;
 
 import java.util.List;
 
-import redis.clients.jedis.BinaryJedisCommands;
+import ibsp.cache.client.command.BinaryJedisCommands;
 import ibsp.cache.client.protocol.ByteUtil;
 import ibsp.cache.client.utils.CONSTS.DataType;
 

@@ -3,7 +3,7 @@ package ibsp.cache.client.structure;
 import java.util.List;
 
 import ibsp.cache.client.core.NJedis;
-import redis.clients.util.SafeEncoder;
+import ibsp.cache.client.protocol.SafeEncoder;
 
 public class MGet extends Operate<List<byte[]>, NJedis> {
 	private String[] keys;

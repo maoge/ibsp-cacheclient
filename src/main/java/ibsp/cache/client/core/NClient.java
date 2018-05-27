@@ -1,14 +1,6 @@
 package ibsp.cache.client.core;
 
-import redis.clients.jedis.BitOP;
-import redis.clients.jedis.BitPosParams;
-import redis.clients.jedis.BinaryClient.LIST_POSITION;
-import redis.clients.jedis.JedisCluster.Reset;
-import redis.clients.jedis.Protocol;
-import redis.clients.jedis.ScanParams;
-import redis.clients.jedis.SortingParams;
-import redis.clients.jedis.ZParams;
-import redis.clients.util.SafeEncoder;
+import static ibsp.cache.client.protocol.Protocol.toByteArray;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static redis.clients.jedis.Protocol.toByteArray;
+import ibsp.cache.client.command.BinaryClient.LIST_POSITION;
+import ibsp.cache.client.protocol.BitOP;
+import ibsp.cache.client.protocol.BitPosParams;
+import ibsp.cache.client.protocol.SafeEncoder;
+import ibsp.cache.client.protocol.SortingParams;
+import ibsp.cache.client.protocol.ZParams;
 
 public class NClient extends NBinaryClient  {
     public NClient(String host, int port, int timeOut, String connectionName, boolean isSync)  {
@@ -685,17 +682,6 @@ public class NClient extends NBinaryClient  {
 				SafeEncoder.encode(max), offset, count);
 	}
 
-	public void zrevrangeByLex(String key, String max, String min) {
-		zrevrangeByLex(SafeEncoder.encode(key), SafeEncoder.encode(max),
-				SafeEncoder.encode(min));
-	}
-
-	public void zrevrangeByLex(String key, String max, String min, int offset,
-			int count) {
-		zrevrangeByLex(SafeEncoder.encode(key), SafeEncoder.encode(max),
-				SafeEncoder.encode(min), offset, count);
-	}
-
 	public byte[] strlen(final String key) {
 		return strlen(SafeEncoder.encode(key));
 	}
@@ -761,56 +747,6 @@ public class NClient extends NBinaryClient  {
 		return getrange(SafeEncoder.encode(key), startOffset, endOffset);
 	}
 
-	public byte[] publish(final String channel,
-			final String message) {
-		return publish(SafeEncoder.encode(channel),
-				SafeEncoder.encode(message));
-	}
-
-	public byte[] unsubscribe(final String... channels) {
-		final byte[][] cs = new byte[channels.length][];
-		for (int i = 0; i < cs.length; i++) {
-			cs[i] = SafeEncoder.encode(channels[i]);
-		}
-		return unsubscribe(cs);
-	}
-
-	public byte[] psubscribe(final String... patterns) {
-		final byte[][] ps = new byte[patterns.length][];
-		for (int i = 0; i < ps.length; i++) {
-			ps[i] = SafeEncoder.encode(patterns[i]);
-		}
-		return psubscribe(ps);
-	}
-
-	public byte[] punsubscribe(final String... patterns) {
-		final byte[][] ps = new byte[patterns.length][];
-		for (int i = 0; i < ps.length; i++) {
-			ps[i] = SafeEncoder.encode(patterns[i]);
-		}
-		return punsubscribe(ps);
-	}
-
-	public byte[] subscribe(final String... channels) {
-		final byte[][] cs = new byte[channels.length][];
-		for (int i = 0; i < cs.length; i++) {
-			cs[i] = SafeEncoder.encode(channels[i]);
-		}
-		return subscribe(cs);
-	}
-
-	public byte[] pubsubChannels(String pattern) {
-		return pubsub(Protocol.PUBSUB_CHANNELS, pattern);
-	}
-
-	public byte[] pubsubNumPat() {
-		return pubsub(Protocol.PUBSUB_NUM_PAT);
-	}
-
-	public byte[] pubsubNumSub(String... channels) {
-		return pubsub(Protocol.PUBSUB_NUMSUB, channels);
-	}
-
 	public byte[] configSet(String parameter, String value) {
 		return configSet(SafeEncoder.encode(parameter),
 				SafeEncoder.encode(value));
@@ -826,30 +762,6 @@ public class NClient extends NBinaryClient  {
 			p[i] = SafeEncoder.encode(params[i]);
 
 		return p;
-	}
-
-	public byte[] eval(String script, int keyCount,
-			String... params) {
-		return eval(SafeEncoder.encode(script), toByteArray(keyCount),
-				getByteParams(params));
-	}
-
-	public byte[] evalsha(String sha1, int keyCount,
-			String... params) {
-		return evalsha(SafeEncoder.encode(sha1), toByteArray(keyCount),
-				getByteParams(params));
-	}
-
-	public byte[] scriptExists(String... sha1) {
-		final byte[][] bsha1 = new byte[sha1.length][];
-		for (int i = 0; i < bsha1.length; i++) {
-			bsha1[i] = SafeEncoder.encode(sha1[i]);
-		}
-		return scriptExists(bsha1);
-	}
-
-	public byte[] scriptLoad(String script) {
-		return scriptLoad(SafeEncoder.encode(script));
 	}
 
 	public byte[] zadd(String key,
@@ -889,14 +801,6 @@ public class NClient extends NBinaryClient  {
 	public byte[] bitop(BitOP op, final String destKey,
 			String... srcKeys) {
 		return bitop(op, SafeEncoder.encode(destKey), getByteParams(srcKeys));
-	}
-
-	public byte[] sentinel(final String... args) {
-		final byte[][] arg = new byte[args.length][];
-		for (int i = 0; i < arg.length; i++) {
-			arg[i] = SafeEncoder.encode(args[i]);
-		}
-		return sentinel(arg);
 	}
 
 	public byte[] dump(final String key) {
@@ -958,184 +862,10 @@ public class NClient extends NBinaryClient  {
 		return clientSetname(SafeEncoder.encode(name));
 	}
 
-	public byte[] migrate(final String host, final int port,
-			final String key, final int destinationDb, final int timeout) {
-		return migrate(SafeEncoder.encode(host), port, SafeEncoder.encode(key),
-				destinationDb, timeout);
-	}
-
 	public byte[] hincrByFloat(final String key,
 			final String field, double increment) {
 		return hincrByFloat(SafeEncoder.encode(key), SafeEncoder.encode(field),
 				increment);
-	}
-
-	public byte[] scan(final String cursor,
-			final ScanParams params) {
-		return scan(SafeEncoder.encode(cursor), params);
-	}
-
-	public byte[] hscan(final String key, final String cursor,
-			final ScanParams params) {
-		return hscan(SafeEncoder.encode(key), SafeEncoder.encode(cursor),
-				params);
-	}
-
-	public byte[] sscan(final String key, final String cursor,
-			final ScanParams params) {
-		return sscan(SafeEncoder.encode(key), SafeEncoder.encode(cursor),
-				params);
-	}
-
-	public byte[] zscan(final String key, final String cursor,
-			final ScanParams params) {
-		return zscan(SafeEncoder.encode(key), SafeEncoder.encode(cursor),
-				params);
-	}
-
-	public byte[] cluster(final String subcommand,
-			final int... args) {
-		final byte[][] arg = new byte[args.length + 1][];
-		for (int i = 1; i < arg.length; i++) {
-			arg[i] = toByteArray(args[i - 1]);
-		}
-		arg[0] = SafeEncoder.encode(subcommand);
-		return cluster(arg);
-	}
-
-	public byte[] pubsub(final String subcommand,
-			final String... args) {
-		final byte[][] arg = new byte[args.length + 1][];
-		for (int i = 1; i < arg.length; i++) {
-			arg[i] = SafeEncoder.encode(args[i - 1]);
-		}
-		arg[0] = SafeEncoder.encode(subcommand);
-		return pubsub(arg);
-	}
-
-	public byte[] cluster(final String subcommand,
-			final String... args) {
-		final byte[][] arg = new byte[args.length + 1][];
-		for (int i = 1; i < arg.length; i++) {
-			arg[i] = SafeEncoder.encode(args[i - 1]);
-		}
-		arg[0] = SafeEncoder.encode(subcommand);
-		return cluster(arg);
-	}
-
-	public byte[] cluster(final String subcommand) {
-		final byte[][] arg = new byte[1][];
-		arg[0] = SafeEncoder.encode(subcommand);
-		return cluster(arg);
-	}
-
-	public byte[] clusterNodes() {
-		return cluster(Protocol.CLUSTER_NODES);
-	}
-
-	public byte[] clusterMeet(final String ip,
-			final int port) {
-		return cluster(Protocol.CLUSTER_MEET, ip, String.valueOf(port));
-	}
-
-	public byte[] clusterReset(Reset resetType) {
-		return cluster(Protocol.CLUSTER_RESET, resetType.toString());
-	}
-
-	public byte[] clusterAddSlots(final int... slots) {
-		return cluster(Protocol.CLUSTER_ADDSLOTS, slots);
-	}
-
-	public byte[] clusterDelSlots(final int... slots) {
-		return cluster(Protocol.CLUSTER_DELSLOTS, slots);
-	}
-
-	public byte[] clusterInfo() {
-		return cluster(Protocol.CLUSTER_INFO);
-	}
-
-	public byte[] clusterGetKeysInSlot(final int slot,
-			final int count) {
-		final int[] args = new int[] { slot, count };
-		return cluster(Protocol.CLUSTER_GETKEYSINSLOT, args);
-	}
-
-	public byte[] clusterSetSlotNode(final int slot,
-			final String nodeId) {
-		return cluster(Protocol.CLUSTER_SETSLOT, String.valueOf(slot),
-				Protocol.CLUSTER_SETSLOT_NODE, nodeId);
-	}
-
-	public byte[] clusterSetSlotMigrating(final int slot,
-			final String nodeId) {
-		return cluster(Protocol.CLUSTER_SETSLOT, String.valueOf(slot),
-				Protocol.CLUSTER_SETSLOT_MIGRATING, nodeId);
-	}
-
-	public byte[] clusterSetSlotImporting(final int slot,
-			final String nodeId) {
-		return cluster(Protocol.CLUSTER_SETSLOT, String.valueOf(slot),
-				Protocol.CLUSTER_SETSLOT_IMPORTING, nodeId);
-	}
-
-	public byte[] pfadd(String key,
-			final String... elements) {
-		return pfadd(SafeEncoder.encode(key), SafeEncoder.encodeMany(elements));
-	}
-
-	public byte[] pfcount(final String key) {
-		return pfcount(SafeEncoder.encode(key));
-	}
-
-	public byte[] pfcount(final String... keys) {
-		return pfcount(SafeEncoder.encodeMany(keys));
-	}
-
-	public byte[] pfmerge(final String destkey,
-			final String... sourcekeys) {
-		return pfmerge(SafeEncoder.encode(destkey),
-				SafeEncoder.encodeMany(sourcekeys));
-	}
-
-	public byte[] clusterSetSlotStable(final int slot) {
-		return cluster(Protocol.CLUSTER_SETSLOT, String.valueOf(slot),
-				Protocol.CLUSTER_SETSLOT_STABLE);
-	}
-
-	public byte[] clusterForget(final String nodeId) {
-		return cluster(Protocol.CLUSTER_FORGET, nodeId);
-	}
-
-	public byte[] clusterFlushSlots() {
-		return cluster(Protocol.CLUSTER_FLUSHSLOT);
-	}
-
-	public byte[] clusterKeySlot(final String key) {
-		return cluster(Protocol.CLUSTER_KEYSLOT, key);
-	}
-
-	public byte[] clusterCountKeysInSlot(final int slot) {
-		return cluster(Protocol.CLUSTER_COUNTKEYINSLOT, String.valueOf(slot));
-	}
-
-	public byte[] clusterSaveConfig() {
-		return cluster(Protocol.CLUSTER_SAVECONFIG);
-	}
-
-	public byte[] clusterReplicate(final String nodeId) {
-		return cluster(Protocol.CLUSTER_REPLICATE, nodeId);
-	}
-
-	public byte[] clusterSlaves(final String nodeId) {
-		return cluster(Protocol.CLUSTER_SLAVES, nodeId);
-	}
-
-	public byte[] clusterFailover() {
-		return cluster(Protocol.CLUSTER_FAILOVER);
-	}
-
-	public byte[] clusterSlots() {
-		return cluster(Protocol.CLUSTER_SLOTS);
 	}
 
 }
