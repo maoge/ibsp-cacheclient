@@ -75,7 +75,7 @@ import ibsp.cache.client.structure.ZRem;
 import ibsp.cache.client.structure.ZRemrangeByRank;
 import ibsp.cache.client.structure.ZRemrangeByScore;
 import ibsp.cache.client.structure.ZScore;
-import ibsp.cache.client.utils.CONSTS;
+import ibsp.common.utils.CONSTS;
 
 /**
  * 缓存层接口API实现类(单例 since v1.2.0)

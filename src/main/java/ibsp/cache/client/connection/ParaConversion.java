@@ -17,7 +17,7 @@ import ibsp.cache.client.exception.ProxyRedisException.PROXYERROR;
 import ibsp.cache.client.protocol.Protocol;
 import ibsp.cache.client.protocol.RedisOutputStream;
 import ibsp.cache.client.protocol.SafeEncoder;
-import ibsp.cache.client.utils.CONSTS;
+import ibsp.common.utils.CONSTS;
 
 public abstract class ParaConversion {
 	public static final Logger logger = LoggerFactory.getLogger(ParaConversion.class);

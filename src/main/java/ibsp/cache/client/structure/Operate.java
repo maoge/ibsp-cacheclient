@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ibsp.cache.client.command.BinaryJedisCommands;
-import ibsp.cache.client.utils.CONSTS.DataType;
+import ibsp.common.utils.CONSTS.DataType;
 
 public abstract class Operate<T, E extends BinaryJedisCommands> implements IExecutor<T, E> {
 	public static final Long DEFAULT_ERROR = -1L;

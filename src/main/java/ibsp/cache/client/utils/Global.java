@@ -7,6 +7,7 @@ import ibsp.cache.client.pool.ConnectionPool;
 
 
 public class Global {
-	public static Map<String, ConnectionPool> poolList = 
-			new HashMap<String, ConnectionPool>();
+	
+	public static Map<String, ConnectionPool> poolList = new HashMap<String, ConnectionPool>();
+	
 }

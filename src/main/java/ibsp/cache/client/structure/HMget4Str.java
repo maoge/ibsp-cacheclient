@@ -4,7 +4,7 @@ import java.util.List;
 
 import ibsp.cache.client.core.NJedis;
 import ibsp.cache.client.protocol.SafeEncoder;
-import ibsp.cache.client.utils.CONSTS.DataType;
+import ibsp.common.utils.CONSTS.DataType;
 
 public class HMget4Str extends Operate<List<byte[]>, NJedis> {
 	private String[] fields;

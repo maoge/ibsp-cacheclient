@@ -4,7 +4,7 @@ import java.util.List;
 
 import ibsp.cache.client.command.BinaryJedisCommands;
 import ibsp.cache.client.protocol.ByteUtil;
-import ibsp.cache.client.utils.CONSTS.DataType;
+import ibsp.common.utils.CONSTS.DataType;
 
 public class HMget4Bit extends Operate<List<byte[]>,BinaryJedisCommands> {
 	private String[] fields;

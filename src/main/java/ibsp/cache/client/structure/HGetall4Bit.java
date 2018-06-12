@@ -2,9 +2,9 @@ package ibsp.cache.client.structure;
 
 import java.util.Map;
 
-import ibsp.cache.client.utils.CONSTS.DataType;
 import ibsp.cache.client.command.BinaryJedisCommands;
 import ibsp.cache.client.protocol.SafeEncoder;
+import ibsp.common.utils.CONSTS.DataType;
 
 public class HGetall4Bit extends Operate<Map<byte[], byte[]>, BinaryJedisCommands> {
 

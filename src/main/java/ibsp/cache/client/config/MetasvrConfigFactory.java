@@ -17,20 +17,23 @@ import ibsp.cache.client.exception.CacheServiceException.CacheServiceErrorInfo;
 import ibsp.cache.client.pool.AsyncConnectionPool;
 import ibsp.cache.client.pool.ConnectionPool;
 import ibsp.cache.client.pool.SyncConnectionPool;
-import ibsp.cache.client.utils.CONSTS;
 import ibsp.cache.client.utils.Global;
-import ibsp.cache.client.utils.HttpUtils;
-import ibsp.cache.client.utils.SVarObject;
+import ibsp.common.events.EventController;
+import ibsp.common.events.EventSubscriber;
+import ibsp.common.events.EventType;
+import ibsp.common.utils.CONSTS;
+import ibsp.common.utils.HttpUtils;
+import ibsp.common.utils.MetasvrUrlConfig;
+import ibsp.common.utils.SVarObject;
 
 /***
  * 从metaserver获得缓存配置信息, 以单例模式对外提供使用 
  */
-public class MetasvrConfigFactory {
+public class MetasvrConfigFactory implements EventSubscriber {
 	private static final Logger logger = LoggerFactory.getLogger(MetasvrConfigFactory.class);
 	private static final ReentrantLock monitor = new ReentrantLock();
 	private static MetasvrConfigFactory instance = null;
 	
-	private MetasvrUrlConfig metasvrUrl;
 	private Collection<String> globalGroupId;
 	private Map<String, Proxy> mapProxy;
 
@@ -50,20 +53,10 @@ public class MetasvrConfigFactory {
 		return instance;
 	}
 	
-	public String getMetasvrUrl() {
-		return metasvrUrl.getNextUrl();
-	}
-	
-	public void putBrokenUrl(String url) {
-		metasvrUrl.putBrokenUrl(url);
-	}
-	
-	public void doUrlCheck() {
-		metasvrUrl.doUrlCheck();
-	}
-
 	private MetasvrConfigFactory(String metasvrUrl) {
-		this.metasvrUrl = new MetasvrUrlConfig(metasvrUrl);
+		MetasvrUrlConfig.init(metasvrUrl);
+		EventController.getInstance().subscribe(CONSTS.TYPE_CACHE_CLIENT, this);
+		
 		this.globalGroupId = new HashSet<String>();
 		this.mapProxy = new HashMap<String, Proxy>();
 	}
@@ -91,7 +84,7 @@ public class MetasvrConfigFactory {
 	}
 	
 	private void loadConfigInfo(String groupId) {
-		String initUrl = String.format("%s/%s/%s?%s", this.metasvrUrl.getNextUrl(), 
+		String initUrl = String.format("%s/%s/%s?%s", MetasvrUrlConfig.get().getNextUrl(), 
 				CONSTS.CACHE_SERVICE, CONSTS.FUN_GET_PROXY, "SERV_ID="+groupId);
 		SVarObject sVarInvoke = new SVarObject();
 		boolean retInvoke = HttpUtils.getData(initUrl, sVarInvoke);
@@ -125,7 +118,25 @@ public class MetasvrConfigFactory {
 	    return result;
 	}
 	
-	public void addProxy(String groupID, JSONObject obj) {
+	@Override
+	public void postEvent(JSONObject event) {
+		int code = event.getInteger(CONSTS.EV_CODE);
+		String jsonStr = event.getString(CONSTS.EV_JSON_STR);
+		JSONObject obj = JSONObject.parseObject(jsonStr);
+		
+		switch (EventType.get(code)) {
+		case e61:
+			addProxy(obj.getString("SERV_NAME"), obj);
+			break;
+		case e62:
+			removeProxy(obj.getString("SERV_NAME"), obj);
+			break;
+		default:
+			break;
+		}
+	}
+	
+	private void addProxy(String groupID, JSONObject obj) {
 		if (this.hasGroupId(groupID)) {
 			Proxy proxy = new Proxy(obj, groupID);
 			mapProxy.put(proxy.getID(), proxy);
@@ -133,7 +144,7 @@ public class MetasvrConfigFactory {
 		}
 	}
 	
-	public void removeProxy(String groupID, JSONObject obj) {
+	private void removeProxy(String groupID, JSONObject obj) {
 		if (this.hasGroupId(groupID)) {
 			Proxy proxy = new Proxy(obj, groupID);
 			if (mapProxy.containsKey(proxy.getID())) {
@@ -144,7 +155,12 @@ public class MetasvrConfigFactory {
 	}
 
 	public synchronized void close() {
-		metasvrUrl.close();
+		// unsubscribe and stop event controller
+		EventController.getInstance().unsubscribe(CONSTS.TYPE_CACHE_CLIENT);
+		EventController.getInstance().shutdown();
+		
+		MetasvrUrlConfig.get().close();
+		
 		for (ConnectionPool pool : Global.poolList.values()) {
 			pool.shutdown();
 		}
@@ -156,4 +172,5 @@ public class MetasvrConfigFactory {
 			instance = null;
 		}
 	}
+	
 }

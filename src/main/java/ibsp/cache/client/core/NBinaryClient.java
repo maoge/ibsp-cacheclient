@@ -34,9 +34,9 @@ import ibsp.cache.client.protocol.Protocol;
 import ibsp.cache.client.protocol.SafeEncoder;
 import ibsp.cache.client.protocol.SortingParams;
 import ibsp.cache.client.protocol.ZParams;
+import ibsp.common.utils.CONSTS;
 import ibsp.cache.client.protocol.Protocol.Command;
 import ibsp.cache.client.protocol.Protocol.Keyword;
-import ibsp.cache.client.utils.CONSTS;
 
 public class NBinaryClient extends NJedisConnection {
 

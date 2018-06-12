@@ -2,8 +2,8 @@ package ibsp.cache.client.config;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-import ibsp.cache.client.utils.CONSTS;
-import ibsp.cache.client.utils.PropertiesUtils;
+import ibsp.common.utils.CONSTS;
+import ibsp.common.utils.PropertiesUtils;
 
 /***
  * 配置信息类
@@ -29,11 +29,11 @@ public class Configuration {
     }
     
 	private Configuration() {
-		PropertiesUtils pUtils = PropertiesUtils.getInstance(CONSTS.CACHE_PROP_FILE);
+		PropertiesUtils pUtils = PropertiesUtils.getInstance(CONSTS.INIT_PROP_FILE);
 		this.poolSize          = pUtils.getInt(CONSTS.POOL_SIZE, 1);
 		this.connectionMode    = pUtils.get(CONSTS.CONNECTION_MODE, "sync");
         this.redisProxyTimeout = pUtils.getInt(CONSTS.REDIS_PROXY_TIMEOUT, 30);
-        this.metasvrUrl        = pUtils.get(CONSTS.CONS_METASVR_ROOTURL, "");
+        this.metasvrUrl        = pUtils.get(CONSTS.METASVR_ROOTURL, "");
         this.serviceID         = pUtils.get(CONSTS.CONS_SERVICE_ID, "");
 	}
 
