@@ -4,8 +4,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
-import ibsp.cache.client.config.Configuration;
 import ibsp.cache.client.core.NJedis;
+import ibsp.common.utils.IBSPConfig;
 
 /**
  * 同步连接池
@@ -124,7 +124,7 @@ public class SyncConnectionPool extends ConnectionPool {
     */
 	private class Checker implements Runnable{
 		
-		private final long IDLE_TIME = Configuration.getInstance().getRedisProxyTimeout()*1000*2;
+		private final long IDLE_TIME = IBSPConfig.getInstance().getCacheRedisProxyTimeout()*1000*2;
 		private final long TOP = Long.MAX_VALUE-10000000;
 		
 		@Override

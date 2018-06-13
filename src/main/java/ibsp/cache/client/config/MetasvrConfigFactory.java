@@ -23,6 +23,7 @@ import ibsp.common.events.EventSubscriber;
 import ibsp.common.events.EventType;
 import ibsp.common.utils.CONSTS;
 import ibsp.common.utils.HttpUtils;
+import ibsp.common.utils.IBSPConfig;
 import ibsp.common.utils.MetasvrUrlConfig;
 import ibsp.common.utils.SVarObject;
 
@@ -67,10 +68,10 @@ public class MetasvrConfigFactory implements EventSubscriber {
 		
 		this.globalGroupId.add(groupId);
 		this.loadConfigInfo(groupId);
-		if (Configuration.getInstance().getConnectionMode().equals("sync")) {
+		if (IBSPConfig.getInstance().getCacheConnectionMode().equals("sync")) {
 			ConnectionPool pool = new SyncConnectionPool(groupId);
 			Global.poolList.put(groupId, pool);
-		} else if (Configuration.getInstance().getConnectionMode().equals("async")) {
+		} else if (IBSPConfig.getInstance().getCacheConnectionMode().equals("async")) {
 			ConnectionPool pool = new AsyncConnectionPool(groupId);
 			Global.poolList.put(groupId, pool);
 		} else {

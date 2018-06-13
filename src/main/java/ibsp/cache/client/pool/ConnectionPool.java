@@ -18,7 +18,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ibsp.cache.client.config.Configuration;
 import ibsp.cache.client.config.MetasvrConfigFactory;
 import ibsp.cache.client.config.Proxy;
 import ibsp.cache.client.core.NJedis;
@@ -29,6 +28,7 @@ import ibsp.cache.client.exception.CacheServiceException.CacheServiceErrorInfo;
 import ibsp.cache.client.structure.CacheRequest;
 import ibsp.cache.client.structure.CacheResponse;
 import ibsp.cache.client.structure.Operate;
+import ibsp.common.utils.IBSPConfig;
 import ibsp.cache.client.exception.RedisConnectionException;
 import ibsp.cache.client.exception.RedisDataException;
 import ibsp.cache.client.exception.RedisException;
@@ -51,7 +51,7 @@ public abstract class ConnectionPool {
 	protected Map<Exception, String> excepts = Collections.synchronizedMap(new HashMap<Exception, String>());
 
 	protected ConnectionPool(String groupID) {
-		this.size = Configuration.getInstance().getPoolSize();
+		this.size = IBSPConfig.getInstance().getCachePoolSize();
 		this.count = new AtomicLong(0);
 		this.groupID = groupID;
 		this.poolList = Collections.synchronizedList(new ArrayList<AtomicReference<Poolable<NJedis>>>());
@@ -367,8 +367,8 @@ public abstract class ConnectionPool {
 		logger.info("Make connection: " + name);
 		try {
 			NJedis jedis = null;
-			String mode = Configuration.getInstance().getConnectionMode();
-			int timeout = Configuration.getInstance().getRedisProxyTimeout();
+			String mode = IBSPConfig.getInstance().getCacheConnectionMode();
+			int timeout = IBSPConfig.getInstance().getCacheRedisProxyTimeout();
 			if (mode.equals("async")) {
 				jedis = new NJedis(ip, port, timeout, name, false);
 			} else if (mode.equals("sync")) {

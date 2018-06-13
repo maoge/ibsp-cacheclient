@@ -7,9 +7,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import ibsp.cache.client.config.Configuration;
 import ibsp.cache.client.core.NJedis;
 import ibsp.cache.client.exception.RedisException;
+import ibsp.common.utils.IBSPConfig;
 
 public class AsyncConnectionPool extends ConnectionPool {
 	
@@ -23,7 +23,7 @@ public class AsyncConnectionPool extends ConnectionPool {
 	
 	public AsyncConnectionPool(String groupID) {
 		super(groupID);
-		int timeout = Configuration.getInstance().getRedisProxyTimeout();
+		int timeout = IBSPConfig.getInstance().getCacheRedisProxyTimeout();
         this.checkerSleepTime = timeout*1000/3>1000 ? 1000 : timeout*1000/3;
         
 		check = true;

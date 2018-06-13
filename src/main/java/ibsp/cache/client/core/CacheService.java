@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import ibsp.cache.client.config.Configuration;
 import ibsp.cache.client.protocol.ByteUtil;
 import ibsp.cache.client.protocol.Tuple;
 import ibsp.cache.client.structure.Append;
@@ -76,6 +75,7 @@ import ibsp.cache.client.structure.ZRemrangeByRank;
 import ibsp.cache.client.structure.ZRemrangeByScore;
 import ibsp.cache.client.structure.ZScore;
 import ibsp.common.utils.CONSTS;
+import ibsp.common.utils.IBSPConfig;
 
 /**
  * 缓存层接口API实现类(单例 since v1.2.0)
@@ -91,8 +91,8 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 			return instance;
 		synchronized (mtx) {
 			if (instance == null) {
-				Configuration config = Configuration.getInstance();
-				instance = new CacheService(config.getServiceID(), config.getMetasvrUrl());
+				IBSPConfig config = IBSPConfig.getInstance();
+				instance = new CacheService(config.getCacheServiceID(), config.getMetasvrUrl());
 			}
 		}
 		return instance;
