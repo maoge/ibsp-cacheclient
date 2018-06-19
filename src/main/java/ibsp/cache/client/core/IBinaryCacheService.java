@@ -16,7 +16,9 @@ public interface IBinaryCacheService {
 	 * @param value
 	 * @return 成功返回OK，未设置返回null
 	 */
-	public String set(final String key, byte[] value);
+	public String set(final String key, final byte[] value);
+	
+	public String set(final String key, final byte[] value, int expireSeconds);
 
 	/**
 	 * 返回给定key的值. 如果key不存在，则返回null. 如果key的类型不是string，则返回错误.

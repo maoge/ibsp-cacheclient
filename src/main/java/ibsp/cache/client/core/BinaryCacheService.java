@@ -39,6 +39,18 @@ public class BinaryCacheService implements IBinaryCacheService {
 		CacheResponse resp = execute(request);
 		return resp.getCode();
 	}
+	
+	@Override
+	public String set(String key, byte[] value, int expireSeconds) {
+		CacheRequest<Set> request = new CacheRequest<Set>();
+		Set param = new Set();
+		param.setKey(key);
+		param.setByteValue(value);
+		param.setSecond(expireSeconds);
+		request.setParam(param);
+		CacheResponse resp = execute(request);
+		return resp.getCode();
+	}
 
 	@Override
 	public byte[] getBytes(String key) {
