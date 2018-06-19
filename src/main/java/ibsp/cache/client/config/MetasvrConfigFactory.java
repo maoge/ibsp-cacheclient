@@ -21,11 +21,13 @@ import ibsp.cache.client.utils.Global;
 import ibsp.common.events.EventController;
 import ibsp.common.events.EventSubscriber;
 import ibsp.common.events.EventType;
+import ibsp.common.utils.BasicOperation;
 import ibsp.common.utils.CONSTS;
 import ibsp.common.utils.HttpUtils;
 import ibsp.common.utils.IBSPConfig;
 import ibsp.common.utils.MetasvrUrlConfig;
 import ibsp.common.utils.SVarObject;
+import ibsp.common.utils.StringUtils;
 
 /***
  * 从metaserver获得缓存配置信息, 以单例模式对外提供使用 
@@ -135,6 +137,21 @@ public class MetasvrConfigFactory implements EventSubscriber {
 		default:
 			break;
 		}
+	}
+	
+	@Override
+	public void doCompute() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void doReport() {
+		String lsnrAddr = EventController.getInstance().getLsnrAddr();
+		if (StringUtils.isNullOrEmtpy(lsnrAddr))
+			return;
+		
+		BasicOperation.putClientStatisticInfo("cureuprapapa", lsnrAddr, CONSTS.TYPE_CACHE_CLIENT);
 	}
 	
 	private void addProxy(String groupID, JSONObject obj) {
