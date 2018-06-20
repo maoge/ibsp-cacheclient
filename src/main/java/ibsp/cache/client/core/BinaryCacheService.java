@@ -9,6 +9,7 @@ import ibsp.cache.client.exception.CacheServiceException.CacheServiceErrorInfo;
 import ibsp.cache.client.pool.ConnectionPool;
 import ibsp.cache.client.structure.CacheRequest;
 import ibsp.cache.client.structure.CacheResponse;
+import ibsp.cache.client.structure.Del;
 import ibsp.cache.client.structure.Get;
 import ibsp.cache.client.structure.Getset;
 import ibsp.cache.client.structure.Set;
@@ -106,6 +107,19 @@ public class BinaryCacheService implements IBinaryCacheService {
         	return (Long)resp.getResult();
         }
         return FAILED_RESULT;
+	}
+	
+	@Override
+	public Long del(String key) {
+		CacheRequest<Del> request = new CacheRequest<Del>();
+		Del param = new Del();
+		param.setKey(key);
+		request.setParam(param);
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (Long) resp.getResult();
+		}
+		return FAILED_RESULT;
 	}
 
 	protected CacheResponse execute(final CacheRequest<?> request) {

@@ -58,5 +58,7 @@ public interface IBinaryCacheService {
 	 */
 	public Long setnx(final String key, final byte[] value);
 	
+	public Long del(final String key);
+	
 //	public void setAllowLog(final boolean bAllowLog);
 }
