@@ -8,6 +8,7 @@ import java.util.Set;
 import ibsp.cache.client.protocol.ByteUtil;
 import ibsp.cache.client.protocol.Tuple;
 import ibsp.cache.client.structure.Append;
+import ibsp.cache.client.structure.BRpop;
 import ibsp.cache.client.structure.CacheRequest;
 import ibsp.cache.client.structure.CacheResponse;
 import ibsp.cache.client.structure.Decr;
@@ -606,6 +607,21 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 		CacheResponse resp = execute(request);
 		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
 			return new String((byte[]) resp.getResult());
+		}
+		return null;
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<String> brpop(int timeout, String... keys) {
+		CacheRequest<BRpop> request = new CacheRequest<BRpop>();
+		BRpop brpop = new BRpop();
+		brpop.setTimeout(timeout);
+		brpop.setKeys(keys);
+		request.setParam(brpop);
+		CacheResponse resp = execute(request);
+		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
+			return (List<String>) resp.getResult();
 		}
 		return null;
 	}

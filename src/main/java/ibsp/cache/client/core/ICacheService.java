@@ -57,6 +57,8 @@ public interface ICacheService extends ICacheCommand, IBinaryCacheService {
 	public String ltrim(final String key, final long start, final long end);
 
 	public String rpop(final String key);
+	
+	public List<String> brpop(int timeout, final String... keys);
 
 	public Long rpush(final String key, final String... values);
 

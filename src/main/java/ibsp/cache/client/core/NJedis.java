@@ -1716,7 +1716,7 @@ public class NJedis extends NBinaryJedis
 //			client.rollbackTimeout();
 		}
 	}
-
+	
 	/**
 	 * Sort a Set or a List accordingly to the specified parameters and store the result at dstkey.
 	 *
