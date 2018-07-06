@@ -4,27 +4,28 @@ import ibsp.cache.client.command.BinaryJedisCommands;
 import ibsp.cache.client.protocol.SafeEncoder;
 
 public class Lpushx extends Operate<Long, BinaryJedisCommands> {
-    private String[] values;
+    private byte[][] values;
 	
 	public Lpushx() {
 		command = "LPUSHX";
 		operateType = OperateType.WRITE;
 	}
 
-	public void setValues(final String... values) {
+	public void setValues(final byte[]... values) {
 		this.values = values;
 	}
    
-	public String[] getValues() {
+	public byte[][] getValues() {
 		return this.values;
 	}
 	
 	private byte[][] getBinValues() {
-	    final byte[][] bvalues = new byte[values.length][];
-	    for (int i = 0; i < values.length; i++) {
-	    	bvalues[i] = SafeEncoder.encode(values[i]);
-	    }
-	    return bvalues;
+	    //final byte[][] bvalues = new byte[values.length][];
+	    //for (int i = 0; i < values.length; i++) {
+	    //	bvalues[i] = SafeEncoder.encode(values[i]);
+	    //}
+	    //return bvalues;
+		return values;
 	}
 	
 	@Override

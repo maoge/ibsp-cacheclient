@@ -42,11 +42,11 @@ public interface ICacheService extends ICacheCommand, IBinaryCacheService {
 
 	public Long llen(final String key);
 
-	public String lpop(final String key);
+	public byte[] lpop(final String key);
 
-	public Long lpush(final String key, final String... values);
+	public Long lpush(final String key, final byte[]... values);
 
-	public Long lpushx(final String key, final String... values);
+	public Long lpushx(final String key, final byte[]... values);
 
 	public List<byte[]> lrange(final String key, final long start, final long end);
 
@@ -56,11 +56,11 @@ public interface ICacheService extends ICacheCommand, IBinaryCacheService {
 
 	public String ltrim(final String key, final long start, final long end);
 
-	public String rpop(final String key);
+	public byte[] rpop(final String key);
 	
-	public List<String> brpop(int timeout, final String... keys);
+	public List<byte[]> brpop(int timeout, final byte[]... keys);
 
-	public Long rpush(final String key, final String... values);
+	public Long rpush(final String key, final byte[]... values);
 
 	public Long rpushx(final String key, final String value);
 

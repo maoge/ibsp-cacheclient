@@ -23,7 +23,6 @@ import ibsp.cache.client.protocol.SafeEncoder;
 import ibsp.cache.client.protocol.SortingParams;
 import ibsp.cache.client.protocol.Tuple;
 import ibsp.cache.client.protocol.ZParams;
-import ibsp.cache.client.protocol.Protocol.Command;
 import ibsp.cache.client.utils.JedisByteHashMap;
 import ibsp.cache.client.exception.RedisDataException;
 import ibsp.cache.client.exception.RedisException;
@@ -1451,7 +1450,16 @@ public class NBinaryJedis implements BasicCommands, BinaryJedisCommands, MultiKe
 		checkIsInMulti();
 		// client.setTimeoutInfinite();
 		try {
-			return client.getBinaryMultiBulkReply(getResultSet(client.sendCommand(Command.BLPOP, 0, args)));
+			//return client.getBinaryMultiBulkReply(getResultSet(client.sendCommand(Command.BLPOP, 0, args)));
+			byte[] buff = client.brpop(args);
+			if (buff == null)
+				return null;
+			
+			byte[] resultBuf = getResultSet(buff);
+			if (resultBuf == null)
+				return null;
+			
+			return client.getBinaryMultiBulkReply(resultBuf);
 		} finally {
 			// client.rollbackTimeout();
 		}

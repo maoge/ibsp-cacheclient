@@ -472,7 +472,7 @@ public class FunctionTest {
         cacheService.del(listKey );
         /** LPUSH **/
         try {
-            long result = cacheService.lpush(listKey, value1, value2, value3, value4);
+            long result = cacheService.lpush(listKey, value1.getBytes(), value2.getBytes(), value3.getBytes(), value4.getBytes());
             if (result==4) {
                 logger.info("lpush测试通过！");
             } else {
@@ -483,7 +483,7 @@ public class FunctionTest {
         }
         /** RPUSH **/
         try {
-            long result = cacheService.rpush(listKey, value5);
+            long result = cacheService.rpush(listKey, value5.getBytes());
             if (result==5) {
                 logger.info("rpush测试通过！");
             } else {
@@ -494,7 +494,7 @@ public class FunctionTest {
         }
         /** LPUSHX **/ 
         try {
-            long result = cacheService.lpushx(listKey, value6);
+            long result = cacheService.lpushx(listKey, value6.getBytes());
             if (result==6) {
                 logger.info("lpushx测试通过！");
             } else {
@@ -516,7 +516,7 @@ public class FunctionTest {
         }
         /** LPOP **/
         try {
-            String value = cacheService.lpop(listKey);
+            byte[] value = cacheService.lpop(listKey);
             if (value!=null) {
                 logger.info("lpop测试通过！");
             } else {
@@ -527,7 +527,7 @@ public class FunctionTest {
         }
         /** RPOP **/   
         try {
-            String value = cacheService.rpop(listKey);
+            byte[] value = cacheService.rpop(listKey);
             if (value!=null) {
                 logger.info("rpop测试通过！");
             } else {

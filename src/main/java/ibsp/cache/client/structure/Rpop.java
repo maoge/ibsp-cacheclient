@@ -4,7 +4,7 @@ import ibsp.cache.client.command.BinaryJedisCommands;
 import ibsp.cache.client.protocol.SafeEncoder;
 
 public class Rpop extends Operate<byte[], BinaryJedisCommands> {
-
+	
 	public Rpop() {
 		command = "RPOP";
 		operateType = OperateType.WRITE;
@@ -18,7 +18,8 @@ public class Rpop extends Operate<byte[], BinaryJedisCommands> {
 	@Override
 	public byte[] doExecute(BinaryJedisCommands jedis) throws Exception {
 		byte[] result = jedis.rpop(SafeEncoder.encode(getKey()));
-		setRespLength(result.length);
+		int len = result == null ? 0 : result.length;
+		setRespLength(len);
 		return result;
 	}
 	

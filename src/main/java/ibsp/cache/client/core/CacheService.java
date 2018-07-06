@@ -497,20 +497,20 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 	}
 
 	@Override
-	public String lpop(String key) {
+	public byte[] lpop(String key) {
 		CacheRequest<Lpop> request = new CacheRequest<Lpop>();
 		Lpop lpop = new Lpop();
 		lpop.setKey(key);
 		request.setParam(lpop);
 		CacheResponse resp = execute(request);
 		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return new String((byte[]) resp.getResult());
+			return (byte[]) resp.getResult();
 		}
 		return null;
 	}
 
 	@Override
-	public Long lpush(String key, String... values) {
+	public Long lpush(String key, byte[]... values) {
 		CacheRequest<Lpush> request = new CacheRequest<Lpush>();
 		Lpush lpush = new Lpush();
 		lpush.setKey(key);
@@ -524,7 +524,7 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 	}
 
 	@Override
-	public Long lpushx(String key, String... values) {
+	public Long lpushx(String key, byte[]... values) {
 		CacheRequest<Lpushx> request = new CacheRequest<Lpushx>();
 		Lpushx lpushx = new Lpushx();
 		lpushx.setKey(key);
@@ -599,35 +599,44 @@ public class CacheService extends BinaryCacheService implements ICacheService {
 	}
 
 	@Override
-	public String rpop(String key) {
+	public byte[] rpop(String key) {
 		CacheRequest<Rpop> request = new CacheRequest<Rpop>();
 		Rpop rpop = new Rpop();
 		rpop.setKey(key);
 		request.setParam(rpop);
 		CacheResponse resp = execute(request);
 		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return new String((byte[]) resp.getResult());
+			byte[] resultBytes = (byte[]) resp.getResult();
+			if (resultBytes != null) {
+				return resultBytes;
+			}
 		}
 		return null;
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
-	public List<String> brpop(int timeout, String... keys) {
+	@SuppressWarnings("unchecked")
+	public List<byte[]> brpop(int timeout, byte[]... keys) {
 		CacheRequest<BRpop> request = new CacheRequest<BRpop>();
 		BRpop brpop = new BRpop();
 		brpop.setTimeout(timeout);
 		brpop.setKeys(keys);
 		request.setParam(brpop);
 		CacheResponse resp = execute(request);
+		if (resp == null)
+			return null;
+		
 		if (CacheResponse.OK_CODE.equals(resp.getCode())) {
-			return (List<String>) resp.getResult();
+			Object obj = resp.getResult();
+			if (obj != null) {
+				return (List<byte[]>) resp.getResult();
+			}
 		}
 		return null;
 	}
 
 	@Override
-	public Long rpush(String key, String... values) {
+	public Long rpush(String key, byte[]... values) {
 		CacheRequest<Rpush> request = new CacheRequest<Rpush>();
 		Rpush rpush = new Rpush();
 		rpush.setKey(key);

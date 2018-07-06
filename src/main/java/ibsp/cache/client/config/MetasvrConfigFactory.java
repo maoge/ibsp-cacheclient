@@ -57,7 +57,6 @@ public class MetasvrConfigFactory implements EventSubscriber {
 	}
 	
 	private MetasvrConfigFactory(String metasvrUrl) {
-		MetasvrUrlConfig.init(metasvrUrl);
 		EventController.getInstance().subscribe(CONSTS.TYPE_CACHE_CLIENT, this);
 		
 		this.globalGroupId = new HashSet<String>();

@@ -108,6 +108,10 @@ public interface BinaryJedisCommands {
 
 	byte[] rpop(byte[] key);
 
+	List<byte[]> blpop(int timeout, byte[]... keys);
+
+	List<byte[]> brpop(int timeout, byte[]... keys);
+
 	Long sadd(byte[] key, byte[]... member);
 
 	Set<byte[]> smembers(byte[] key);
