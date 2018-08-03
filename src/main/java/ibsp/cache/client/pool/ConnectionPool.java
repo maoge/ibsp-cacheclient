@@ -60,29 +60,30 @@ public abstract class ConnectionPool {
 		this.configs = MetasvrConfigFactory.getInstance();
 		Map<String, Proxy> proxyMap = configs.getMapProxy(groupID);
 		connectionCount = new HashMap<String, Integer>();
-		int sizeNow = 0;
 
 		updateLock.lock();
 		try {
-			if (proxyMap != null && proxyMap.size() != 0) {
-				RandomString strings = new RandomString(proxyMap.keySet());
-				while (sizeNow < size) {
-					String key = strings.nextString();
+			if (proxyMap == null && proxyMap.size() == 0) {
+				logger.error("proxy map is null!");
+				return;
+			}
+
+			Set<String> proxyKeys = proxyMap.keySet();
+			for (int i = 0; i < size; i++) {
+				for (String key : proxyKeys) {
 					if (this.connectionCount.containsKey(key)) {
 						this.connectionCount.put(key, this.connectionCount.get(key) + 1);
 					} else {
 						this.connectionCount.put(key, 1);
 					}
-					sizeNow++;
 
-					String name = "Connection" + sizeNow + "_" + key;
+					String name = String.format("Connection%d_%s", i, key);
 					Proxy proxy = proxyMap.get(key);
 					String[] temp = proxy.getAddress().split(":");
 					makeNewConnection(name, temp[0], Integer.parseInt(temp[1]));
-					if (sizeNow == size)
-						break;
 				}
 			}
+
 		} finally {
 			updateLock.unlock();
 		}
