@@ -86,10 +86,12 @@ public class MetasvrConfigFactory implements EventSubscriber {
 	}
 	
 	private void loadConfigInfo(String groupId) {
-		String initUrl = String.format("%s/%s/%s?%s", MetasvrUrlConfig.get().getNextUrl(), 
+		/*String initUrl = String.format("%s/%s/%s?%s", MetasvrUrlConfig.get().getNextUrl(), 
 				CONSTS.CACHE_SERVICE, CONSTS.FUN_GET_PROXY, "SERV_ID="+groupId);
 		SVarObject sVarInvoke = new SVarObject();
-		boolean retInvoke = HttpUtils.getData(initUrl, sVarInvoke);
+		boolean retInvoke = HttpUtils.getData(initUrl, sVarInvoke);*/
+		SVarObject sVarInvoke = new SVarObject();
+		boolean retInvoke = BasicOperation.getDeployedProxyByServiceID(groupId, sVarInvoke);
 		
 		if (retInvoke) {
 			JSONObject jsonObj = JSONObject.parseObject(sVarInvoke.getVal());
