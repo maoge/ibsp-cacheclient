@@ -23,7 +23,6 @@ import ibsp.common.events.EventSubscriber;
 import ibsp.common.events.EventType;
 import ibsp.common.utils.BasicOperation;
 import ibsp.common.utils.CONSTS;
-import ibsp.common.utils.HttpUtils;
 import ibsp.common.utils.IBSPConfig;
 import ibsp.common.utils.MetasvrUrlConfig;
 import ibsp.common.utils.SVarObject;
@@ -36,6 +35,7 @@ public class MetasvrConfigFactory implements EventSubscriber {
 	private static final Logger logger = LoggerFactory.getLogger(MetasvrConfigFactory.class);
 	private static final ReentrantLock monitor = new ReentrantLock();
 	private static MetasvrConfigFactory instance = null;
+	private String serviceID = "";
 	
 	private Collection<String> globalGroupId;
 	private Map<String, Proxy> mapProxy;
@@ -66,6 +66,11 @@ public class MetasvrConfigFactory implements EventSubscriber {
 	public synchronized void addGroup(String groupId) {
 		if (this.hasGroupId(groupId)) 
 			return;
+		
+		if (globalGroupId.size() > 1) {
+			serviceID += CONSTS.COMMA;
+		}
+		serviceID += groupId;
 		
 		this.globalGroupId.add(groupId);
 		this.loadConfigInfo(groupId);
@@ -152,7 +157,7 @@ public class MetasvrConfigFactory implements EventSubscriber {
 		if (StringUtils.isNullOrEmtpy(lsnrAddr))
 			return;
 		
-		BasicOperation.putClientStatisticInfo("cureuprapapa", lsnrAddr, CONSTS.TYPE_CACHE_CLIENT);
+		BasicOperation.putClientStatisticInfo("", lsnrAddr, CONSTS.TYPE_CACHE_CLIENT, serviceID);
 	}
 	
 	private void addProxy(String groupID, JSONObject obj) {
